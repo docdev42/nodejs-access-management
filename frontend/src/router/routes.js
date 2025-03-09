@@ -3,8 +3,9 @@ const routes = [
     path: '/',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: '', component: () => import('pages/IndexPage.vue') },
-      { path: 'admin', component: () => import('pages/AdminPage.vue') },
+      { path: '', component: () => import('src/pages/DashboardPage.vue') },
+      { path: 'admin', component: () => import('src/pages/AdminPage.vue') },
+      { path: 'usuario', component: () => import('src/pages/UserPage.vue') },
     ]
   },
   {

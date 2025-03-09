@@ -28,6 +28,7 @@
           v-for="link in linksList"
           :key="link.title"
           v-bind="link"
+          target="_self"
         />
     </q-drawer>
 
@@ -49,55 +50,88 @@
 
         <!-- Opções do menu -->
         <q-list class="q-mt-md">
-          <EssentialLink icon="person" title="Minha Página" @click="verPerfil" />
-          <EssentialLink icon="logout" title="Sair" @click="logout" />
+          <EssentialLink
+          v-for="link in userLinks"
+          :key="link.title"
+          v-bind="link"
+          target="_self"
+        />
         </q-list>
       </q-list>
     </q-drawer>
 
     <q-page-container>
-      <router-view />
+      <KeepAlive>
+        <router-view />
+      </KeepAlive>
     </q-page-container>
 
   </q-layout>
 </template>
 
-<script setup>
+<script>
 import { ref } from 'vue'
 import EssentialLink from 'components/EssentialLink.vue'
 import { useQuasar } from 'quasar'
 
-const $q = useQuasar()
-const leftDrawerOpen = ref(false)
-const rightDrawerOpen = ref(false)
-const linksList = [
-  {
-    title: 'Painel administrativo',
-    icon: 'admin_panel_settings',
-    link: '/admin'
+export default {
+  components: {
+    EssentialLink, 
   },
-  {
-    title: 'Dashboard',
-    icon: 'dashboard',
-    link: '/dashboard'
+  data() {
+    return {
+      linksList: [
+        {
+          title: 'Painel administrativo',
+          icon: 'admin_panel_settings',
+          link: '/admin'
+        },
+        {
+          title: 'Dashboard',
+          icon: 'dashboard',
+          link: '/'
+        },
+        {
+          title: 'Usuários',
+          icon: 'group',
+          link: '/usuarios'
+        }
+      ],
+      userLinks: [
+        {
+          title: 'Minha página',
+          icon: 'person',
+          link: '/usuario'
+        },
+        {
+          title: 'Sair',
+          icon: 'logout',
+          link: '/admin'
+        },
+      ],
+      leftDrawerOpen: ref(false),
+      rightDrawerOpen: ref(false),
+      $q: useQuasar()
+    }
   },
-  {
-    title: 'Usuários',
-    icon: 'group',
-    link: '/usuarios'
-  }
-]
-
-function toggleDarkMode() {
-  console.log('fu');
-  $q.dark.toggle();
-}
-
-function toggleLeftDrawer () {
-  leftDrawerOpen.value = !leftDrawerOpen.value
-}
-
-function toggleRightDrawer () {
-  rightDrawerOpen.value = !rightDrawerOpen.value
-}
+  mounted() {
+    const darkMode = JSON.parse(localStorage.getItem('darkMode'));
+    if (darkMode !== null) {
+      this.$q.dark.set(darkMode);
+    }
+  },
+  methods: {
+    toggleDarkMode() {
+      const isDarkMode = this.$q.dark.isActive;
+      this.$q.dark.set(!isDarkMode);
+      localStorage.setItem('darkMode', JSON.stringify(!isDarkMode));
+    },
+    toggleLeftDrawer() {
+      this.leftDrawerOpen = !this.leftDrawerOpen
+    },
+    toggleRightDrawer() {
+      this.rightDrawerOpen = !this.rightDrawerOpen
+    }
+  } 
+}; 
 </script>
