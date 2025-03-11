@@ -1,0 +1,23 @@
+POST http://localhost:3000/admin/permissions
+Content-Type: application/json
+
+{
+  "name": "manager",
+  "slug": "manager",
+  "description": "Permite admnistrar aprte do sistema"
+}
+
+###
+GET http://localhost:3000/admin/permissions
+
+###
+GET http://localhost:3000/admin/permissions/3
+Content-Type: application/json
+
+###
+PATCH http://localhost:3000/admin/permissions/1
+Content-Type: application/json
+
+{
+  "slug": "manager"
+}

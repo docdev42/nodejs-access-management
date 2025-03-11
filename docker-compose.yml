@@ -1,0 +1,18 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: postgres_avmb
+    restart: always
+    environment:
+      POSTGRES_USER: doc
+      POSTGRES_PASSWORD: doc123
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql # Script de inicialização (opcional)
+      - ./db/postgresql.conf:/etc/postgresql/postgresql.conf # Configuração personalizada (opcional)
+
+volumes:
+  pgdata:
