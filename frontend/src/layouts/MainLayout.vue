@@ -101,7 +101,7 @@ export default {
         {
           title: 'Minha página',
           icon: 'person',
-          link: '/usuario'
+          link: 'usuarios/usuario'
         },
         {
           title: 'Sair',

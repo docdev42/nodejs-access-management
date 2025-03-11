@@ -5,7 +5,9 @@ const routes = [
     children: [
       { path: '', component: () => import('src/pages/DashboardPage.vue') },
       { path: 'admin', component: () => import('src/pages/AdminPage.vue') },
-      { path: 'usuario', component: () => import('src/pages/UserPage.vue') },
+      { path: 'admin/permissoes-de-usuario', component: () => import('src/pages/UserPermissionsPage.vue') },
+      { path: 'usuarios/usuario', component: () => import('src/pages/UserPage.vue') },
+      { path: 'usuarios', component: () => import('src/pages/UsersListPage.vue') },
     ]
   },
   {

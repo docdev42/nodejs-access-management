@@ -291,6 +291,11 @@ export default defineComponent({
       });
     }
 
+    function viewUser(row) {
+      console.log(row)
+      this.$router.push('/admin/permissoes-de-usuario')
+    }
+
     function atualizarGraficos() {
       // Configurar gráfico de barras
       const opcoesBarra = {
@@ -399,7 +404,8 @@ export default defineComponent({
       contagemPermissoes,
       percentualAdminUsers,
       corPermissao,
-      atualizarPermissoes
+      atualizarPermissoes,
+      viewUser
     };
   }
 });
