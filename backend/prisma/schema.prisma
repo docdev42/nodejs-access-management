@@ -23,7 +23,7 @@ model permission {
 model user {
   id Int @id @default(autoincrement())
   name String
-  birthdate DateTime
+  birthdate Date
   email String @unique
   password String
   role String

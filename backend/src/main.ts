@@ -3,6 +3,7 @@ import { AppModule } from './app.module';
 import { PermissionSlugAlreadyExistsErrorFilter } from './permissions/filters/permission-slug-already-exists.filter';
 import { ValidationPipe } from '@nestjs/common';
 import { NotFoundErrorFilter } from './common/filters/not-found-error.filter';
+import { InvalidCredentialsErrorFilter } from './auth/filters/invalid-credentials-erro.filter';
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -10,6 +11,7 @@ async function bootstrap() {
   app.useGlobalFilters(
     new PermissionSlugAlreadyExistsErrorFilter(),
     new NotFoundErrorFilter(),
+    new InvalidCredentialsErrorFilter(),
   );
   app.useGlobalPipes(
     new ValidationPipe({
