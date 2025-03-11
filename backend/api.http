@@ -21,3 +21,10 @@ Content-Type: application/json
 {
   "slug": "manager"
 }
+
+###
+GET http://localhost:3000/permissions?page=Manager
+
+###
+GET http://localhost:3000/permissions/1
+Content-Type: application/json
