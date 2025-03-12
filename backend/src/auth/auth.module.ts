@@ -4,6 +4,7 @@ import { AuthService } from './auth.service';
 import { PrismaService } from 'src/prisma/prisma.service';
 import * as bcrypt from 'bcrypt';
 import { JwtModule } from '@nestjs/jwt';
+import { CreateUserDto } from 'src/users/public/dto/create-user.dto';
 
 @Module({
   imports: [
@@ -20,55 +21,44 @@ export class AuthModule implements OnModuleInit {
   constructor(private prismaService: PrismaService) {}
 
   async onModuleInit() {
-    const admin = await this.prismaService.user.findFirst({
-      where: {
+    const users: CreateUserDto[] = [
+      {
         email: 'admin@user.com',
+        name: 'Prof. Carvalho',
+        password: bcrypt.hashSync('admin123', 10),
+        birthday: '1945-06-14T00:00:00.000Z',
+        approved: true,
       },
-    });
+      {
+        email: 'misty@user.com',
+        name: 'Misty',
+        password: bcrypt.hashSync('misty123', 10),
+        birthday: '1987-04-01T00:00:00.000Z',
+        approved: true,
+      },
+      {
+        email: 'ash@user.com',
+        name: 'Ash',
+        password: bcrypt.hashSync('ash123', 10),
+        birthday: '1987-05-22T00:00:00.000Z',
+        approved: true,
+      },
+    ];
 
-    if (!admin) {
-      await this.prismaService.user.create({
-        data: {
-          email: 'admin@user.com',
-          name: 'Bills Sama',
-          password: bcrypt.hashSync('admin123', 10),
-          birthday: '1000-12-25T00:00:00.000Z',
+    for (const createUserDto of users) {
+      const user = await this.prismaService.user.findFirst({
+        where: {
+          email: {
+            contains: createUserDto.email,
+          },
         },
       });
-    }
 
-    const manager = await this.prismaService.user.findFirst({
-      where: {
-        email: 'manager@user.com',
-      },
-    });
-
-    if (!manager) {
-      await this.prismaService.user.create({
-        data: {
-          email: 'manager@user.com',
-          name: 'Sheng Long',
-          password: bcrypt.hashSync('manager123', 10),
-          birthday: '1500-03-23T00:00:00.000Z',
-        },
-      });
-    }
-
-    const user = await this.prismaService.user.findFirst({
-      where: {
-        email: 'user@user.com',
-      },
-    });
-
-    if (!user) {
-      await this.prismaService.user.create({
-        data: {
-          email: 'user@user.com',
-          name: 'Vegeta',
-          password: bcrypt.hashSync('user123', 10),
-          birthday: '1989-07-13T00:00:00.000Z',
-        },
-      });
+      if (!user) {
+        await this.prismaService.user.create({
+          data: createUserDto,
+        });
+      }
     }
   }
 }

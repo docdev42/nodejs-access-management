@@ -16,7 +16,7 @@ import { UserRoles } from 'src/auth/roles/roles';
 import { Roles } from 'src/auth/roles/roles.decorator';
 import { RolesGuard } from 'src/auth/roles/roles.guard';
 
-@Roles(UserRoles.Admin) //aplica quais roles em todas as rotas, pode por antes de cada metodo
+// @Roles(UserRoles.Admin) //aplica quais roles em todas as rotas, pode por antes de cada metodo
 @UseGuards(AuthGuard) // ativa a validação RolesGuard
 @Controller('admin/permissions')
 export class AdminPermissionsController {

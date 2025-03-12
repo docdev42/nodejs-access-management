@@ -69,7 +69,7 @@ export class PermissionsModule implements OnModuleInit {
     ];
 
     for (const createPermissionDto of permissions) {
-      const originalPermission = await this.prismaService.permission.findFirst({
+      const permission = await this.prismaService.permission.findFirst({
         where: {
           name: {
             mode: 'insensitive',
@@ -78,7 +78,7 @@ export class PermissionsModule implements OnModuleInit {
         },
       });
 
-      if (!originalPermission) {
+      if (!permission) {
         await this.prismaService.permission.create({
           data: createPermissionDto,
         });
