@@ -12,6 +12,12 @@
 
       <q-card-section>
         <q-form @submit="handleSubmit">
+          <q-slide-transition>
+            <div v-if="tab === 'register'">
+              <q-input v-model="form.name" label="Nome" type="text" required filled class="q-mb-md" />
+            </div>
+          </q-slide-transition>
+
           <q-input v-model="form.email" label="E-mail" type="email" required filled />
           <q-input v-model="form.password" label="Senha" type="password" required filled class="q-mt-md" />
 
@@ -31,6 +37,10 @@
 </template>
 
 <script>
+import api from 'src/services/api';
+import { useQuasar } from 'quasar';
+import axios from 'axios';
+
 export default {
   data() {
     return {
@@ -39,16 +49,61 @@ export default {
         email: '',
         password: '',
         confirmPassword: ''
-      }
+      },
+      $q: useQuasar(),
     };
   },
   methods: {
     handleSubmit() {
-      if (this.tab === 'register' && this.form.password !== this.form.confirmPassword) {
-        this.$q.notify({ type: 'negative', message: 'As senhas não coincidem!' });
-        return;
+      if (this.tab === 'login') {
+        this.login();
+      } else {
+        this.register();
       }
-      this.$q.notify({ type: 'positive', message: this.tab === 'login' ? 'Login bem-sucedido!' : 'Registro concluído!' });
+    },
+    async login() {         
+      await api.post('/auth/login', this.form)
+      .then((res) => {
+        const token = res.data.access_token;
+        console.log(res);
+        localStorage.setItem('token', token);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+
+        this.$q.notify({
+          type: 'positive',
+          message: `Login realizado com sucesso, Bem vindo ${token}`,
+        });  
+      })
+      .catch((err) => {
+        this.$q.notify({
+          type: 'negative',
+          message: err.response?.data?.message || 'Erro ao logar usuário!',
+        });
+      });
+    },
+    async register() {
+      if (this.form.password === this.form.confirmPassword) {
+        return this.$q.notify({
+          type: 'negative',
+          message: 'Senhas devem ser iguais!',
+        });
+      }
+
+      try {        
+          await api.post('/users', this.form);
+          this.$q.notify({
+            type: 'positive',
+            message: 'Cadastro realizado com sucesso! Aguarde aprovação de uma administrador.',
+          });
+
+          this.tab = 'login';
+          return;
+      } catch (error) {
+        this.$q.notify({
+          type: 'negative',
+          message: error.response?.data?.message || 'Erro ao cadastrar usuário!',
+        });
+      }
     }
   }
 };

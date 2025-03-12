@@ -71,6 +71,13 @@ export default defineConfig((/* ctx */) => {
 
     // Full list of options: https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#devserver
     devServer: {
+      proxy: {
+        '/api': {
+          target: 'http://localhost:3000', // URL do backend
+          changeOrigin: true,
+          pathRewrite: { '^/api': '' },
+        },
+      },
       // https: true,
       open: true // opens browser window automatically
     },
@@ -78,7 +85,7 @@ export default defineConfig((/* ctx */) => {
     // https://v2.quasar.dev/quasar-cli-vite/quasar-config-file#framework
     framework: {
       config: {
-        dark: false, // Carrega o tema do localStorage
+        dark: false, // Carrega o tema do localStorage  
       },
 
       // iconSet: 'material-icons', // Quasar icon set
@@ -92,7 +99,7 @@ export default defineConfig((/* ctx */) => {
       // directives: [],
 
       // Quasar plugins
-      plugins: []
+      plugins: ['Notify'],
     },
 
     // animations: 'all', // --- includes all animations
