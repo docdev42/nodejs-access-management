@@ -17,7 +17,7 @@ import { Roles } from 'src/auth/roles/roles.decorator';
 import { RolesGuard } from 'src/auth/roles/roles.guard';
 
 @Roles(UserRoles.Admin) //aplica quais roles em todas as rotas, pode por antes de cada metodo
-@UseGuards(AuthGuard, RolesGuard) // ativa a validação
+@UseGuards(AuthGuard) // ativa a validação RolesGuard
 @Controller('admin/permissions')
 export class AdminPermissionsController {
   constructor(private readonly permissionsService: AdminPermissionsService) {}
@@ -34,7 +34,7 @@ export class AdminPermissionsController {
 
   @Get(':id')
   findOne(@Param('id') id: string) {
-    return this.permissionsService.findOne(+id);
+    return this.permissionsService.findOne(id);
   }
 
   @Patch(':id')
@@ -42,11 +42,11 @@ export class AdminPermissionsController {
     @Param('id') id: string,
     @Body() updatePermissionDto: UpdatePermissionDto,
   ) {
-    return this.permissionsService.update(+id, updatePermissionDto);
+    return this.permissionsService.update(id, updatePermissionDto);
   }
 
   @Delete(':id')
   remove(@Param('id') id: string) {
-    return this.permissionsService.remove(+id);
+    return this.permissionsService.remove(id);
   }
 }

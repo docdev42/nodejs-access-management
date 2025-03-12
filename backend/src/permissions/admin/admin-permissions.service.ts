@@ -29,7 +29,7 @@ export class AdminPermissionsService {
     return await this.prismaService.permission.findMany();
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const permission = await this.prismaService.permission.findFirst({
       where: {
         id: id,
@@ -43,7 +43,7 @@ export class AdminPermissionsService {
     return permission;
   }
 
-  async update(id: number, updatePermissionDto: UpdatePermissionDto) {
+  async update(id: string, updatePermissionDto: UpdatePermissionDto) {
     const permission = await this.prismaService.permission.findFirst({
       where: {
         id: id,
@@ -75,7 +75,7 @@ export class AdminPermissionsService {
     });
   }
 
-  remove(id: number) {
+  remove(id: string) {
     return `This action removes a #${id} permission`;
   }
 }

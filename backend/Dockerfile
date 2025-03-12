@@ -1,16 +1,9 @@
 FROM node:20.18.3
 
+RUN apt update && apt install -y openssl procps
+
 USER node
 
-WORKDIR /app
+WORKDIR 
 
-COPY package.json package-lock.json ./
-RUN npm install
-
-# Copiar código-fonte
-COPY . .
-
-# Expor porta e iniciar a aplicação
-EXPOSE 3000
-
-CMD [ "npm", "start", "tail", "-f", "/dev/null"]
+CMD [ "tail", "-f", "/dev/null" ]

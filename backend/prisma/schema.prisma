@@ -13,18 +13,56 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-model permission {
-  id Int @id @default(autoincrement())
-  name String
-  slug String @unique
-  description String
+model User {
+  id        String   @id @default(uuid())
+  email     String   @unique
+  name      String
+  password  String
+  birthday  DateTime?
+  approved  Boolean @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  deletedAt DateTime?
+
+  // Relationships
+  permissions UserPermission[]
+
+  @@map("users")
 }
 
-model user {
-  id Int @id @default(autoincrement())
-  name String
-  birthdate Date
-  email String @unique
-  password String
-  role String
+model Permission {
+  id          String   @id @default(uuid())
+  name        String   @unique
+  slug        String   @unique
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  // Relationships
+  users UserPermission[]
+
+  @@map("permissions")
+}
+
+model UserPermission {
+  id           String   @id @default(uuid())
+  expiresAt    DateTime
+  isRevoked    Boolean  @default(false)
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  // Foreign keys
+  userId       String
+  permissionId String
+
+  // Relationships
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, permissionId])
+  @@index([userId])
+  @@index([permissionId])
+  @@index([expiresAt])
+  @@index([isRevoked])
+  @@map("user_permissions")
 }

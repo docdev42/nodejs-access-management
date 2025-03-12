@@ -14,6 +14,17 @@ export class AuthService {
       where: {
         email: dto.email,
       },
+      include: {
+        permissions: {
+          include: {
+            permission: true,
+          },
+          where: {
+            isRevoked: false,
+            expiresAt: { gt: new Date() },
+          },
+        },
+      },
     });
 
     if (!user || !bcrypt.compareSync(dto.password, user.password)) {
@@ -22,7 +33,7 @@ export class AuthService {
 
     const payload = {
       sub: user.id,
-      role : user.role,
+      permissions: user.permissions,
     };
 
     return {

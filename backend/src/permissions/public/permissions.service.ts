@@ -21,7 +21,7 @@ export class PermissionsService {
     });
   }
 
-  async findOne(id: number) {
+  async findOne(id: string) {
     const permission = await this.prismaService.permission.findFirst({
       where: {
         id: id,
