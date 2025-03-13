@@ -6,6 +6,7 @@ import { CreateUserDto } from './public/dto/create-user.dto';
 import { NotFoundError } from 'src/common/errors';
 import { UpdateUserDto } from './public/dto/update-user.dto';
 import { JwtService } from '@nestjs/jwt';
+import { formatUserList } from 'src/utils/format-users-list';
 
 @Injectable()
 export class UsersService {
@@ -50,9 +51,17 @@ export class UsersService {
 
   async findAll(dto: { search?: string; page?: number; limit?: number }) {
     const { search, page = 1, limit = 15 } = dto;
-    return await this.prismaService.user.findMany({
+    const users = await this.prismaService.user.findMany({
       include: {
-        permissions: true,
+        permissions: {
+          where: {
+            isRevoked: false,
+            expiresAt: { gt: new Date() },
+          },
+          include: {
+            permission: true,
+          },
+        },
       },
       ...(search && {
         where: {
@@ -74,6 +83,8 @@ export class UsersService {
       }),
       skip: (page - 1) * limit,
     });
+
+    return formatUserList(users);
   }
 
   async findOne(id: string) {

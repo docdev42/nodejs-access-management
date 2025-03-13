@@ -1,4 +1,3 @@
-// DashboardPermissoes.vue
 <template>
   <q-page padding>
     <div class="row q-col-gutter-md">
@@ -33,7 +32,7 @@
         <q-card>
           <q-card-section>
             <div class="text-h6">Média de Permissões/Usuário</div>
-            <div class="text-h3 text-center q-mt-md">{{ mediaPermissoesPorUsuario.toFixed(1) }}</div>
+            <div class="text-h3 text-center q-mt-md">{{ avaragePermissionsPerUser.toFixed(1) }}</div>
           </q-card-section>
         </q-card>
       </div>
@@ -44,7 +43,7 @@
             <div class="text-h6">Distribuição de Permissões</div>
           </q-card-section>
           <q-card-section>
-            <div id="grafico-barras" style="height: 300px;"></div>
+            <div id="bar-chart" style="height: 300px;"></div>
           </q-card-section>
         </q-card>
       </div>
@@ -55,7 +54,7 @@
             <div class="text-h6">Usuários com Acesso Administrativo</div>
           </q-card-section>
           <q-card-section>
-            <div id="grafico-pizza" style="height: 300px;"></div>
+            <div id="pizza-chart" style="height: 300px;"></div>
           </q-card-section>
         </q-card>
       </div>
@@ -92,12 +91,12 @@
                   <q-chip
                     v-for="permission in props.row.permissions"
                     :key="permission"
-                    :color="corPermissao(permission)"
+                    :style="{ backgroundColor: stringToColor(permission.name), color: 'white' }"
                     text-color="white"
                     size="sm"
                     class="q-ma-xs"
                   >
-                    {{ permission }}
+                    {{ permission.name }}
                   </q-chip>
                 </q-td>
               </template>
@@ -146,18 +145,26 @@ export default defineComponent({
   name: 'DashboardPermissoes',
 
   setup() {
-    let graficoBarra = null;
-    let graficoPizza = null;
+    let barChart = null;
+    let pizzaChart = null;
     let users = ref([]);
+    let permissions = ref([]);
 
     async function loadUsers() {
       await api.get('/users/').then((res) => {
         users.value = res.data;
-        console.log(res)
       }).catch((err) => {
         console.log(err)
       })
     } 
+
+    async function loadPermissions() {
+      await api.get('/admin/permissions').then((res) => {
+        permissions.value = res.data;
+      }).catch((err) => {
+        console.log(err);
+      })
+    }
 
     const columns = [
       { name: 'name', label: 'Nome', field: 'name', sortable: true, align: 'left' },
@@ -173,76 +180,70 @@ export default defineComponent({
     
     const filtro = ref('');
 
-    const mediaPermissoesPorUsuario = computed(() => {
+    const avaragePermissionsPerUser = computed(() => {
       const total = users.value.reduce((acc, user) => acc + user.permissions.length, 0);
       return total / users.value.length;
     });
 
-    // Contagem de permissões para gráficos
-    const contagemPermissoes = computed(() => {
-      const contagem = {
-        'painel administrativo': 0,
-        'ver dashboard': 0,
-        'ver usuários': 0,
-        'ver perfil de outros usuários': 0,
-        'ativar usuários': 0
-      };
-      
-      users.value.forEach(user => {
-        user.permissions.forEach(perm => {
-          contagem[perm]++;
-        });
+    const permissionsCount = computed(() => {
+      const count = {};
+
+      permissions.value.forEach(permission => {
+        const validUsersCount = permission.users.length;
+        
+        count[permission.name] = validUsersCount;
       });
-      
-      return contagem;
+
+      return count;
     });
 
     const percentualAdminUsers = computed(() => {
-      const adminUsers = users.value.filter(u => 
-        u.permissions.includes('painel administrativo')
-      ).length;
+      const adminUsers = users.value.filter(user => 
+        user.permissions.some(p => 
+          p.name === 'Admin' && 
+          !p.isRevoked && 
+          new Date(p.expiresAt) > new Date()
+        )
+      );
       
       return {
-        admin: adminUsers,
-        naoAdmin: users.value.length - adminUsers
+        admin: adminUsers.length,
+        naoAdmin: users.value.length - adminUsers.length
       };
     });
 
-    function corPermissao(permissao) {
-      const cores = {
-        'painel administrativo': 'red',
-        'ver dashboard': 'green',
-        'ver usuários': 'blue',
-        'ver perfil de outros usuários': 'purple',
-        'ativar usuários': 'black'
-      };
+    function startCharts() {
+      barChart = echarts.init(document.getElementById('bar-chart'));
+      pizzaChart = echarts.init(document.getElementById('pizza-chart'));
       
-      return cores[permissao] || 'grey';
-    }
+      refreshCharts();
 
-    function inicializarGraficos() {
-      // Inicializar gráfico de barras
-      graficoBarra = echarts.init(document.getElementById('grafico-barras'));
-      
-      // Inicializar gráfico de pizza
-      graficoPizza = echarts.init(document.getElementById('grafico-pizza'));
-      
-      atualizarGraficos();
-      
-      // Ajustar tamanho dos gráficos quando a janela é redimensionada
       window.addEventListener('resize', () => {
-        graficoBarra?.resize();
-        graficoPizza?.resize();
+        barChart?.resize();
+        pizzaChart?.resize();
       });
     }
 
+    function stringToColor(str) {
+      let hash = 0;
+
+      for (let i = 0; i < str.length; i++) {
+        hash = str.charCodeAt(i) + ((hash << 5) - hash);
+      }
+
+      const r = (hash >> 16) & 0xFF;
+      const g = (hash >> 8) & 0xFF; 
+      const b = hash & 0xFF;        
+
+      return `rgb(${r}, ${g}, ${b})`;
+    }
+
     function viewUser(row) {
-      console.log(row)
       this.$router.push(`/app/admin/permissoes-de-usuario/${row.id}`)
     }
 
-    function atualizarGraficos() {
-      const opcoesBarra = {
+    function refreshCharts() {
+      const barOptions = {
         tooltip: {
           trigger: 'axis',
           axisPointer: {
@@ -257,7 +258,7 @@ export default defineComponent({
         },
         xAxis: {
           type: 'category',
-          data: Object.keys(contagemPermissoes.value).map(p => p.charAt(0).toUpperCase() + p.slice(1))
+          data: Object.keys(permissionsCount.value).map(p => p.charAt(0).toUpperCase() + p.slice(1))
         },
         yAxis: {
           type: 'value'
@@ -266,19 +267,17 @@ export default defineComponent({
           {
             name: 'Número de Usuários',
             type: 'bar',
-            data: Object.values(contagemPermissoes.value),
+            data: Object.values(permissionsCount.value),
             itemStyle: {
               color: function(params) {
-                const cores = ['#f44336', '#4caf50', '#2196f3', '#9c27b0', '#000000'];
-                return cores[params.dataIndex];
+                return stringToColor(params.name);
               }
             }
           }
         ]
       };
-      
-      // Configurar gráfico de pizza
-      const opcoesPizza = {
+
+      const pizzaOptions = {
         tooltip: {
           trigger: 'item',
           formatter: '{a} <br/>{b}: {c} ({d}%)'
@@ -324,27 +323,28 @@ export default defineComponent({
         ]
       };
       
-      graficoBarra?.setOption(opcoesBarra);
-      graficoPizza?.setOption(opcoesPizza);
+      barChart?.setOption(barOptions);
+      pizzaChart?.setOption(pizzaOptions);
     }
 
     onMounted(() => {
       loadUsers();
-      setTimeout(inicializarGraficos, 100);
+      loadPermissions();
+      setTimeout(startCharts, 1000);
     });
 
     watch(users, () => {
-      atualizarGraficos();
+      refreshCharts();
     }, { deep: true });
 
     return {
       columns,
       paginacao,
       filtro,
-      mediaPermissoesPorUsuario,
-      contagemPermissoes,
+      avaragePermissionsPerUser,
+      permissionsCount,
       percentualAdminUsers,
-      corPermissao,
+      stringToColor,
       viewUser,
       users
     };

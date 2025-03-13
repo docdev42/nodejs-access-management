@@ -26,7 +26,18 @@ export class AdminPermissionsService {
   }
 
   async findAll() {
-    return await this.prismaService.permission.findMany();
+    return await this.prismaService.permission.findMany({
+      include: {
+        users: {
+          where: {
+            isRevoked: false,
+            expiresAt: {
+              gte: new Date(),
+            },
+          },
+        },
+      },
+    });
   }
 
   async findOne(id: string) {
