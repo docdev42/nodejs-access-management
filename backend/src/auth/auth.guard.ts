@@ -6,13 +6,14 @@ import {
 } from '@nestjs/common';
 import { JwtService } from '@nestjs/jwt';
 import { Request } from 'express';
-import { Observable } from 'rxjs';
 import { IS_PUBLIC_KEY } from './public/decorators/public.decorator';
 import { Reflector } from '@nestjs/core';
+import { TokenBlacklistService } from './token-blacklist.service';
 
 @Injectable()
 export class AuthGuard implements CanActivate {
   constructor(
+    private tokenBlacklistService: TokenBlacklistService,
     private jwtService: JwtService,
     private reflector: Reflector,
   ) {}
@@ -32,6 +33,12 @@ export class AuthGuard implements CanActivate {
     if (!token) {
       throw new UnauthorizedException();
     }
+
+    const isBlacklisted = await this.tokenBlacklistService.isBlacklisted(token);
+    if (isBlacklisted) {
+      throw new UnauthorizedException('Token revogado ou expirado');
+    }
+
     try {
       const payload = await this.jwtService.verifyAsync(token, {
         secret: 'secret', //variavel de ambiente

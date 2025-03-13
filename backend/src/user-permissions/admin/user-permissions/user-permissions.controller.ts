@@ -4,12 +4,13 @@ import {
   Delete,
   Get,
   Param,
+  Patch,
   Post,
   UseGuards,
 } from '@nestjs/common';
 import { UserPermissionsService } from './user-permissions.service';
 import { AuthGuard } from 'src/auth/auth.guard';
-import { AssignPermissionDto } from '../dto/assign-permission.dto';
+import { AssignPermissionDto } from '../dto/assign-permission.dto'; 
 
 @UseGuards(AuthGuard)
 @Controller('admin/user-permissions')
@@ -36,7 +37,7 @@ export class UserPermissionsController {
     return this.userPermissionsService.remove(id);
   }
 
-  @Post(':id/revoke')
+  @Patch(':id/revoke')
   revoke(@Param('id') id: string) {
     return this.userPermissionsService.revoke(id);
   }

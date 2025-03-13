@@ -15,7 +15,7 @@
         <q-card>
           <q-card-section>
             <div class="text-h6">Total de Usuários</div>
-            <div class="text-h3 text-center q-mt-md">{{ usuarios.length }}</div>
+            <div class="text-h3 text-center q-mt-md">{{ users.length }}</div>
           </q-card-section>
         </q-card>
       </div>
@@ -67,8 +67,8 @@
           </q-card-section>
           <q-card-section>
             <q-table
-              :rows="usuarios"
-              :columns="colunas"
+              :rows="users"
+              :columns="columns"
               row-key="id"
               v-model="paginacao"
               :filter="filtro"
@@ -81,17 +81,23 @@
                 </q-input>
               </template>
 
-              <template v-slot:body-cell-permissoes="props">
+              <template v-slot:body-cell-approved="{ row }">
+                <q-td>
+                  {{ row.approved ? 'Aprovado' : 'Não aprovado' }}
+                </q-td>
+              </template>
+
+              <template v-slot:body-cell-permissions="props">
                 <q-td :props="props">
                   <q-chip
-                    v-for="permissao in props.row.permissoes"
-                    :key="permissao"
-                    :color="corPermissao(permissao)"
+                    v-for="permission in props.row.permissions"
+                    :key="permission"
+                    :color="corPermissao(permission)"
                     text-color="white"
                     size="sm"
                     class="q-ma-xs"
                   >
-                    {{ permissao }}
+                    {{ permission }}
                   </q-chip>
                 </q-td>
               </template>
@@ -134,6 +140,7 @@
 <script>
 import { defineComponent, ref, computed, onMounted, watch } from 'vue';
 import * as echarts from 'echarts';
+import api from 'src/services/api';
 
 export default defineComponent({
   name: 'DashboardPermissoes',
@@ -141,73 +148,22 @@ export default defineComponent({
   setup() {
     let graficoBarra = null;
     let graficoPizza = null;
+    let users = ref([]);
 
-    // Dados de exemplo
-    const usuarios = ref([
-      { 
-        id: 1, 
-        nome: 'Admin Silva', 
-        email: 'admin@exemplo.com', 
-        permissoes: ['painel administrativo', 'ver dashboard', 'ver usuários', 'ver perfil de outros usuários', 'ativar usuários'],
-        status: 'ativo'
-      },
-      { 
-        id: 2, 
-        nome: 'João Analista', 
-        email: 'joao@exemplo.com', 
-        permissoes: ['ver dashboard', 'ver usuários'],
-        status: 'ativo'
-      },
-      { 
-        id: 3, 
-        nome: 'Maria Suporte', 
-        email: 'maria@exemplo.com', 
-        permissoes: ['ver dashboard', 'ver perfil de outros usuários'],
-        status: 'ativo'
-      },
-      { 
-        id: 4, 
-        nome: 'Carlos Gerente', 
-        email: 'carlos@exemplo.com', 
-        permissoes: ['ver dashboard', 'ver usuários', 'ver perfil de outros usuários'],
-        status: 'ativo'
-      },
-      { 
-        id: 5, 
-        nome: 'Ana Visitante', 
-        email: 'ana@exemplo.com', 
-        permissoes: ['ver dashboard'],
-        status: 'inativo' 
-      },
-      { 
-        id: 6, 
-        nome: 'Roberto Diretor', 
-        email: 'roberto@exemplo.com', 
-        permissoes: ['painel administrativo', 'ver dashboard', 'ver usuários'],
-        status: 'ativo'
-      },
-      { 
-        id: 7, 
-        nome: 'Fernanda RH', 
-        email: 'fernanda@exemplo.com', 
-        permissoes: ['ver dashboard', 'ver usuários', 'ver perfil de outros usuários'],
-        status: 'ativo' 
-      },
-      { 
-        id: 8, 
-        nome: 'Paulo Teste', 
-        email: 'paulo@exemplo.com', 
-        permissoes: ['ver dashboard'],
-        status: 'ativo' 
-      }
-    ]);
+    async function loadUsers() {
+      await api.get('/users/').then((res) => {
+        users.value = res.data;
+        console.log(res)
+      }).catch((err) => {
+        console.log(err)
+      })
+    } 
 
-    const colunas = [
-      { name: 'id', label: 'ID', field: 'id', sortable: true, align: 'left' },
-      { name: 'nome', label: 'Nome', field: 'nome', sortable: true, align: 'left' },
+    const columns = [
+      { name: 'name', label: 'Nome', field: 'name', sortable: true, align: 'left' },
       { name: 'email', label: 'Email', field: 'email', sortable: true, align: 'left' },
-      { name: 'status', label: 'Status', field: 'status', sortable: true, align: 'left' },
-      { name: 'permissoes', label: 'Permissões', field: 'permissoes', sortable: false, align: 'left' },
+      { name: 'approved', label: 'Status', field: 'approved', sortable: true, align: 'left' },
+      { name: 'permissions', label: 'Permissões', field: 'permissions', sortable: false, align: 'left' },
       { name: 'actions', label: 'Ações', field: 'actions', align: 'left' }
     ];
 
@@ -216,16 +172,10 @@ export default defineComponent({
     });
     
     const filtro = ref('');
-    const usuarioSelecionado = ref(null);
-
-    const usuarioAtual = computed(() => {
-      if (!usuarioSelecionado.value) return { permissoes: [] };
-      return usuarios.value.find(u => u.id === usuarioSelecionado.value);
-    });
 
     const mediaPermissoesPorUsuario = computed(() => {
-      const total = usuarios.value.reduce((acc, user) => acc + user.permissoes.length, 0);
-      return total / usuarios.value.length;
+      const total = users.value.reduce((acc, user) => acc + user.permissions.length, 0);
+      return total / users.value.length;
     });
 
     // Contagem de permissões para gráficos
@@ -238,8 +188,8 @@ export default defineComponent({
         'ativar usuários': 0
       };
       
-      usuarios.value.forEach(user => {
-        user.permissoes.forEach(perm => {
+      users.value.forEach(user => {
+        user.permissions.forEach(perm => {
           contagem[perm]++;
         });
       });
@@ -248,13 +198,13 @@ export default defineComponent({
     });
 
     const percentualAdminUsers = computed(() => {
-      const adminUsers = usuarios.value.filter(u => 
-        u.permissoes.includes('painel administrativo')
+      const adminUsers = users.value.filter(u => 
+        u.permissions.includes('painel administrativo')
       ).length;
       
       return {
         admin: adminUsers,
-        naoAdmin: usuarios.value.length - adminUsers
+        naoAdmin: users.value.length - adminUsers
       };
     });
 
@@ -268,11 +218,6 @@ export default defineComponent({
       };
       
       return cores[permissao] || 'grey';
-    }
-
-    function atualizarPermissoes() {
-      // Aqui você implementaria a lógica para salvar as permissões no backend
-      atualizarGraficos();
     }
 
     function inicializarGraficos() {
@@ -293,11 +238,10 @@ export default defineComponent({
 
     function viewUser(row) {
       console.log(row)
-      this.$router.push('/admin/permissoes-de-usuario')
+      this.$router.push(`/app/admin/permissoes-de-usuario/${row.id}`)
     }
 
     function atualizarGraficos() {
-      // Configurar gráfico de barras
       const opcoesBarra = {
         tooltip: {
           trigger: 'axis',
@@ -385,27 +329,24 @@ export default defineComponent({
     }
 
     onMounted(() => {
-      // Inicializar os gráficos após a montagem do componente
+      loadUsers();
       setTimeout(inicializarGraficos, 100);
     });
 
-    watch(usuarios, () => {
+    watch(users, () => {
       atualizarGraficos();
     }, { deep: true });
 
     return {
-      usuarios,
-      colunas,
+      columns,
       paginacao,
       filtro,
-      usuarioSelecionado,
-      usuarioAtual,
       mediaPermissoesPorUsuario,
       contagemPermissoes,
       percentualAdminUsers,
       corPermissao,
-      atualizarPermissoes,
-      viewUser
+      viewUser,
+      users
     };
   }
 });

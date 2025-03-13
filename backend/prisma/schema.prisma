@@ -22,7 +22,6 @@ model User {
   approved  Boolean @default(false)
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
-  deletedAt DateTime?
 
   // Relationships
   permissions UserPermission[]
@@ -59,7 +58,7 @@ model UserPermission {
   user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
   permission   Permission @relation(fields: [permissionId], references: [id], onDelete: Cascade)
 
-  @@unique([userId, permissionId])
+  @@unique([userId, permissionId, expiresAt, isRevoked])
   @@index([userId])
   @@index([permissionId])
   @@index([expiresAt])

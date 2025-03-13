@@ -1,5 +1,5 @@
 <template>
-  <q-page padding>
+  <q-page padding v-if="user">
     <q-card class="q-mb-md">
       <q-card-section>
         <div class="text-h6">Informações do Usuário</div>
@@ -26,7 +26,7 @@
           <q-item>
             <q-item-section>
               <q-item-label class="text-subtitle2">Data de Nascimento</q-item-label>
-              <q-item-label>{{ user.birthDate }}</q-item-label>
+              <q-item-label>{{ date.formatDate(user.birthday, 'DD/MM/YYYY') }}</q-item-label>
             </q-item-section>
           </q-item>
 
@@ -40,7 +40,6 @@
       </q-card-section>
     </q-card>
 
-    <!-- Gerenciamento de Permissões -->
     <q-card>
       <q-card-section>
         <div class="text-h6">Permissões</div>
@@ -50,39 +49,40 @@
 
       <q-card-section>
         <q-list>
-          <q-item v-for="(perm, index) in user.permissions" :key="index">
+          <q-item v-for="(perm, index) in sortedPermissions" :key="index">
             <q-item-section>
-              <q-item-label class="text-subtitle2">{{ perm.name }}</q-item-label>
-              <q-item-label caption>Expira em: {{ perm.expiry }}</q-item-label>
+              <q-item-label class="text-subtitle2">{{ perm.permission.name }}</q-item-label>
+              <q-item-label caption>Expira em: {{ date.formatDate(perm.expiresAt, 'DD/MM/YYYY HH:mm') }}</q-item-label>
             </q-item-section>
 
-            <q-item-section side>
-              <q-btn icon="edit" flat round @click="editPermission(index)" />
-              <q-btn icon="delete" flat round color="red" @click="removePermission(index)" />
+            <q-item-section side v-if="(new Date() < new Date(perm.expiresAt)) && !perm.isRevoked">
+              <q-btn icon="close" flat round color="red" @click="revokePermission(perm)" />
             </q-item-section>
           </q-item>
         </q-list>
 
-        <!-- Botão para Adicionar Permissão -->
         <q-btn label="Adicionar Permissão" color="primary" class="q-mt-md" @click="showAddPermission = true" />
       </q-card-section>
     </q-card>
 
-    <!-- Dialog para Adicionar/Editar Permissão -->
     <q-dialog v-model="showAddPermission">
       <q-card>
         <q-card-section>
-          <div class="text-h6">{{ editingIndex === null ? 'Adicionar Permissão' : 'Editar Permissão' }}</div>
+          <div class="text-h6">Adicionar Permissão</div>
         </q-card-section>
 
         <q-card-section>
           <q-select
-            v-model="newPermission.name"
-            :options="availablePermissions"
+            v-model="newPermission"
+            :options="permissionsOptions"
+            option-label="name"
+            option-value="id"
             label="Permissão"
             dense
+            emit-value
+            map-options
           />
-          <q-input v-model="newPermission.expiry" label="Validade" dense type="datetime-local" />
+          <q-input v-model="expiresAt" label="Validade" dense type="datetime-local" />
         </q-card-section>
 
         <q-card-actions align="right">
@@ -95,47 +95,113 @@
 </template>
 
 <script>
-export default {
-  data() {
-    return {
-      user: {
-        name: "João Silva",
-        email: "joao@email.com",
-        birthDate: "1990-05-15",
-        lastAccess: "2025-03-09 14:30",
-        permissions: [
-          { name: "Admin", expiry: "2025-06-01 23:59" },
-          { name: "Editor", expiry: "2025-04-15 12:00" },
-        ],
-      },
-      availablePermissions: ["Admin", "Editor", "Viewer", "Gerente"],
-      showAddPermission: false,
-      newPermission: { name: "", expiry: "" },
-      editingIndex: null,
+import api from 'src/services/api';
+import { defineComponent, ref, onMounted, computed } from 'vue';
+import { useRoute } from 'vue-router';
+import { date } from 'quasar';
+
+export default defineComponent({
+  name: 'UserPermissionsPage',
+  
+  setup() {
+    let user = ref(null);
+    let permissionsOptions = ref([]);
+    let showAddPermission = ref(false);
+    let newPermission = ref({ name: "", expiry: "" });
+    let expiresAt = ref(null);
+    let editingIndex = ref(null);
+
+    const route = useRoute();
+    const userId = route.params.id; // Obtém o ID da URL
+
+    onMounted(() => {
+      loadUser();
+      loadPermissionsOptions();
+    });
+
+    async function loadUser() {
+      await api.get(`/users/${userId}`).then((res) => {
+        user.value = res.data;
+        console.log(user.value);
+      }).catch((err) => {
+        console.log(err)
+      })
     };
-  },
-  methods: {
-    addPermission() {
-      this.newPermission = { name: "", expiry: "" };
-      this.editingIndex = null;
-      this.showAddPermission = true;
-    },
-    editPermission(index) {
-      this.newPermission = { ...this.user.permissions[index] };
-      this.editingIndex = index;
-      this.showAddPermission = true;
-    },
-    savePermission() {
-      if (this.editingIndex === null) {
-        this.user.permissions.push({ ...this.newPermission });
-      } else {
-        this.user.permissions[this.editingIndex] = { ...this.newPermission };
-      }
-      this.showAddPermission = false;
-    },
-    removePermission(index) {
-      this.user.permissions.splice(index, 1);
-    },
-  },
-};
+
+//availablePermissions: ["Admin", "Editor", "Viewer", "Gerente"],
+    async function loadPermissionsOptions() {
+      await api.get(`/admin/permissions`).then((res) => {
+        permissionsOptions.value = res.data;
+      }).catch((err) => {
+        console.log(err);
+      })
+    };
+
+    async function savePermission() {
+    const payload = {
+      userId: user.value.id,
+      permissionId: newPermission.value,
+      expiresAt: expiresAt.value,
+    };
+    console.log(payload);
+    // Enviar para o backend
+    await api.post('/admin/user-permissions', payload)
+      .then((res) => {
+        showAddPermission.value = false;
+        user.value.permissions.push(res.data)
+        newPermission.value = null;
+        expiresAt.value = null;
+      })
+      .catch((err) => {
+        console.error('Erro ao adicionar permissão:', err);
+      });
+  }
+
+    async function revokePermission(perm) {
+      await api.patch(`/admin/user-permissions/${perm.id}/revoke`).then((res) => {
+        perm.isRevoked = true;
+        console.log(res.data)
+      }).catch((err) => {
+        console.log(err);
+      })
+    };
+
+    const sortedPermissions = computed(() => {
+      return [...user.value.permissions].sort((a, b) => {
+        const now = new Date();
+
+        // Se a permissão está revogada, coloca no fim
+        if (a.isRevoked && !b.isRevoked) return 1;
+        if (!a.isRevoked && b.isRevoked) return -1;
+
+        // Converte para Date para comparação
+        const dateA = new Date(a.expiresAt);
+        const dateB = new Date(b.expiresAt);
+
+        // Se a permissão já expirou, coloca no fim
+        const aExpired = dateA < now;
+        const bExpired = dateB < now;
+
+        if (aExpired && !bExpired) return 1;
+        if (!aExpired && bExpired) return -1;
+
+        // Ordena pela data de expiração (mais cedo primeiro)
+        return dateA - dateB;
+      });
+    });
+
+    return {
+      user,
+      permissionsOptions,
+      showAddPermission,
+      newPermission,
+      editingIndex,
+      savePermission,
+      revokePermission,
+      date,
+      expiresAt,
+      sortedPermissions,
+    };
+  }
+});
 </script>

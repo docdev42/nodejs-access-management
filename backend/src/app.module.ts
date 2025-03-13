@@ -7,9 +7,16 @@ import { PrismaModule } from './prisma/prisma.module';
 import { UsersModule } from './users/users.module';
 import { UserPermissionsController } from './user-permissions/admin/user-permissions/user-permissions.controller';
 import { UserPermissionsService } from './user-permissions/admin/user-permissions/user-permissions.service';
+import { BlacklistModule } from './auth/blacklist.module';
 
 @Module({
-  imports: [PrismaModule, AuthModule, UsersModule, PermissionsModule],
+  imports: [
+    PrismaModule,
+    AuthModule,
+    UsersModule,
+    PermissionsModule,
+    BlacklistModule,
+  ],
   controllers: [AppController, UserPermissionsController],
   providers: [AppService, UserPermissionsService],
 })

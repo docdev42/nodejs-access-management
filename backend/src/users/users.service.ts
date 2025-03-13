@@ -5,10 +5,14 @@ import { EmailAlreadyExistsError } from './errors';
 import { CreateUserDto } from './public/dto/create-user.dto';
 import { NotFoundError } from 'src/common/errors';
 import { UpdateUserDto } from './public/dto/update-user.dto';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class UsersService {
-  constructor(private prismaService: PrismaService) {}
+  constructor(
+    private prismaService: PrismaService,
+    private jwtService: JwtService,
+  ) {}
 
   async create(createUserDto: CreateUserDto) {
     const user = await this.prismaService.user.findFirst({
@@ -21,19 +25,35 @@ export class UsersService {
       throw new EmailAlreadyExistsError(createUserDto.email);
     }
 
-    return this.prismaService.user.create({
+    const newUser = await this.prismaService.user.create({
       data: {
         name: createUserDto.name,
         email: createUserDto.email,
         birthday: createUserDto.birthday,
         password: bcrypt.hashSync(createUserDto.password, 10),
       },
+      include: {
+        permissions: true, // Inclui as permissões após criar o usuário
+      },
     });
+
+    const payload = {
+      sub: newUser.id,
+      permissions: newUser.permissions,
+    };
+    const access_token = this.jwtService.sign(payload);
+
+    return {
+      access_token: access_token,
+    };
   }
 
   async findAll(dto: { search?: string; page?: number; limit?: number }) {
     const { search, page = 1, limit = 15 } = dto;
     return await this.prismaService.user.findMany({
+      include: {
+        permissions: true,
+      },
       ...(search && {
         where: {
           OR: [
@@ -58,6 +78,13 @@ export class UsersService {
 
   async findOne(id: string) {
     const user = await this.prismaService.user.findFirst({
+      include: {
+        permissions: {
+          include: {
+            permission: true,
+          },
+        },
+      },
       where: {
         id: id,
       },

@@ -64,15 +64,13 @@ export default {
     async login() {         
       await api.post('/auth/login', this.form)
       .then((res) => {
-        const token = res.data.access_token;
-        console.log(res);
-        localStorage.setItem('token', token);
-        axios.defaults.headers.common['Authorization'] = `Bearer ${token}`;
+        this.setToken(res.data.access_token);
 
         this.$q.notify({
           type: 'positive',
-          message: `Login realizado com sucesso, Bem vindo ${token}`,
+          message: `Login realizado com sucesso, Bem vindo.`,
         });  
+        this.$router.push('/app')
       })
       .catch((err) => {
         this.$q.notify({
@@ -82,28 +80,33 @@ export default {
       });
     },
     async register() {
-      if (this.form.password === this.form.confirmPassword) {
+      if (this.form.password !== this.form.confirmPassword) {
         return this.$q.notify({
           type: 'negative',
           message: 'Senhas devem ser iguais!',
         });
       }
 
-      try {        
-          await api.post('/users', this.form);
-          this.$q.notify({
+      await api.post('/users', this.form)
+      .then((res) => {
+        this.setToken(res.data.access_token);
+        this.$q.notify({
             type: 'positive',
             message: 'Cadastro realizado com sucesso! Aguarde aprovação de uma administrador.',
           });
-
+          this.$router.push('/app')
           this.tab = 'login';
-          return;
-      } catch (error) {
+      })
+      .catch((err) => {
         this.$q.notify({
           type: 'negative',
-          message: error.response?.data?.message || 'Erro ao cadastrar usuário!',
+          message: err.response?.data?.message || 'Erro ao cadastrar usuário!',
         });
-      }
+      });
+    },
+    setToken(accessToken) {
+        localStorage.setItem('token', accessToken);
+        axios.defaults.headers.common['Authorization'] = `Bearer ${accessToken}`;
     }
   }
 };

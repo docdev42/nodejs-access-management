@@ -27,5 +27,19 @@ export default defineRouter(function (/* { store, ssrContext } */) {
     history: createHistory(process.env.VUE_ROUTER_BASE)
   })
 
+  Router.beforeEach((to, from, next) => {
+    const token = localStorage.getItem('token'); // Busca o token salvo
+  
+    // Verifica se a rota precisa de autenticação
+    const requiresAuth = to.path.startsWith('/app'); 
+  
+    if (requiresAuth && !token) {
+      // Se o usuário não tem token e tenta acessar uma rota protegida, redireciona para login
+      next('/');
+    } else {
+      next(); // Caso contrário, permite a navegação
+    }
+  });
+
   return Router
 })

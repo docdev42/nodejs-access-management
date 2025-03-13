@@ -4,10 +4,15 @@ import { PrismaService } from 'src/prisma/prisma.service';
 import { InvalidCredentialsError } from './errors';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { TokenBlacklistService } from './token-blacklist.service';
 
 @Injectable()
 export class AuthService {
-  constructor(private prismaService: PrismaService, private jwtService: JwtService) {}
+  constructor(
+    private prismaService: PrismaService,
+    private jwtService: JwtService,
+    private tokenBlacklistService: TokenBlacklistService,
+  ) {}
 
   async login(dto: LoginDto) {
     const user = await this.prismaService.user.findFirst({
@@ -35,9 +40,21 @@ export class AuthService {
       sub: user.id,
       permissions: user.permissions,
     };
+    const access_token = this.jwtService.sign(payload);
 
     return {
-      access_token: this.jwtService.sign(payload),
+      access_token: access_token,
+    };
+  }
+
+  async logout(token) {
+    await this.tokenBlacklistService.addToBlacklist(
+      token,
+      this.jwtService.decode(token)['exp'],
+    );
+
+    return {
+      message: 'Logout successful',
     };
   }
 }

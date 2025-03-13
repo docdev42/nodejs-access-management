@@ -14,16 +14,36 @@ services:
       - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql # Script de inicialização (opcional)
       - ./db/postgresql.conf:/etc/postgresql/postgresql.conf # Configuração personalizada (opcional)
 
-  # backend:
-  #   build: ./backend
-  #   ports:
-  #     - "3000:3000"
-  #   volumes:
-  #     - ./backend:/app
-  #     - /app/node_modules
-  #   environment:
-  #     - NODE_ENV=production
-  #   depends_on:
-  #     - postgres
+  backend:
+    build: ./backend
+    ports:
+      - "3000:3000"
+    # env_file: 
+    #   - .backend/dist
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - postgres
+
+  server:
+    build: ./frontend
+    ports:
+      - "80:80"
+    # env_file: 
+    #   - .backend/dist
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - backend
+
+  frontend:
+    build: ./frontend/dev.Dockerfile
+    ports:
+      - "9000:9000"
+    depends_on:
+      - backend
+    volumes:
+      - .:/app
+
 volumes:
   pgdata:

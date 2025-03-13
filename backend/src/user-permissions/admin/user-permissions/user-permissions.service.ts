@@ -70,6 +70,9 @@ export class UserPermissionsService {
   async revoke(id: string) {
     try {
       return await this.prismaService.userPermission.update({
+        include: {
+          permission: true,
+        },
         where: { id },
         data: { isRevoked: true },
       });

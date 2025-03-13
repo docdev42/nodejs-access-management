@@ -29,6 +29,7 @@
           :key="link.title"
           v-bind="link"
           target="_self"
+
         />
     </q-drawer>
 
@@ -55,6 +56,7 @@
           :key="link.title"
           v-bind="link"
           target="_self"
+          @click="() => link.action ? link.action() : $router.push(link.link)"
         />
         </q-list>
       </q-list>
@@ -73,6 +75,7 @@
 import { ref } from 'vue'
 import EssentialLink from 'components/EssentialLink.vue'
 import { useQuasar } from 'quasar'
+import api from 'src/services/api';
 
 export default {
   components: {
@@ -84,29 +87,29 @@ export default {
         {
           title: 'Painel administrativo',
           icon: 'admin_panel_settings',
-          link: '/admin'
+          link: '/app/admin'
         },
         {
           title: 'Dashboard',
           icon: 'dashboard',
-          link: '/'
+          link: '/app/dashboard'
         },
         {
           title: 'Usuários',
           icon: 'group',
-          link: '/usuarios'
+          link: '/app/usuarios'
         }
       ],
       userLinks: [
         {
           title: 'Minha página',
           icon: 'person',
-          link: 'usuarios/usuario'
+          link: 'app/usuarios/usuario'
         },
         {
           title: 'Sair',
           icon: 'logout',
-          link: '/admin'
+          action: this.handleLogout,
         },
       ],
       leftDrawerOpen: ref(false),
@@ -131,6 +134,19 @@ export default {
     },
     toggleRightDrawer() {
       this.rightDrawerOpen = !this.rightDrawerOpen
+    },
+    async handleLogout() {
+      await api.post('/auth/logout', this.form)
+      .then(() => {
+        localStorage.setItem('token', '');
+        this.$router.push('/')
+      })
+      .catch((err) => {
+        this.$q.notify({
+          type: 'negative',
+          message: err.response?.data?.message || 'Erro ao deslogar usuário!',
+        });
+      });
     }
   } 
 }; 
