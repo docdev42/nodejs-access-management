@@ -9,8 +9,8 @@ export class PermissionsController {
   constructor(private readonly permissionsService: PermissionsService) {}
 
   @Get()
-  findAll(@Query() queryDto: PermissionQueryDto) {
-    return this.permissionsService.findAll(queryDto);
+  findAll() {
+    return this.permissionsService.findAll();
   }
 
   @Get(':id')

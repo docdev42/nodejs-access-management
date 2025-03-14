@@ -5,6 +5,10 @@ export class UserQueryDto {
   @IsOptional()
   search: string;
 
+  @IsString()
+  @IsOptional()
+  permission: string;
+
   @Min(1)
   @IsInt()
   @IsOptional()

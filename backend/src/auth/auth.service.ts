@@ -38,7 +38,13 @@ export class AuthService {
 
     const payload = {
       sub: user.id,
-      permissions: user.permissions,
+      name: user.name,
+      permissions: user.permissions.map((p) => ({
+        id: p.id,
+        name: p.permission.name,
+        expiresAt: p.expiresAt,
+        isRevoked: p.isRevoked,
+      })),
     };
     const access_token = this.jwtService.sign(payload);
 

@@ -112,7 +112,7 @@ export default defineComponent({
     let editingIndex = ref(null);
 
     const route = useRoute();
-    const userId = route.params.id; // Obtém o ID da URL
+    const userId = route.params.id;
 
     onMounted(() => {
       loadUser();
@@ -128,7 +128,6 @@ export default defineComponent({
       })
     };
 
-//availablePermissions: ["Admin", "Editor", "Viewer", "Gerente"],
     async function loadPermissionsOptions() {
       await api.get(`/admin/permissions`).then((res) => {
         permissionsOptions.value = res.data;

@@ -69,11 +69,11 @@
               :rows="users"
               :columns="columns"
               row-key="id"
-              v-model="paginacao"
-              :filter="filtro"
+              v-model="pagination"
+              :filter="filter"
             >
               <template v-slot:top>
-                <q-input dense debounce="300" v-model="filtro" placeholder="Buscar">
+                <q-input dense debounce="300" v-model="filter" placeholder="Filtrar por nome ou email">
                   <template v-slot:append>
                     <q-icon name="search" />
                   </template>
@@ -140,6 +140,7 @@
 import { defineComponent, ref, computed, onMounted, watch } from 'vue';
 import * as echarts from 'echarts';
 import api from 'src/services/api';
+import { useColor } from 'src/composables/useColor';
 
 export default defineComponent({
   name: 'DashboardPermissoes',
@@ -149,9 +150,10 @@ export default defineComponent({
     let pizzaChart = null;
     let users = ref([]);
     let permissions = ref([]);
+    const { stringToColor } = useColor();
 
     async function loadUsers() {
-      await api.get('/users/').then((res) => {
+      await api.get('/users').then((res) => {
         users.value = res.data;
       }).catch((err) => {
         console.log(err)
@@ -174,11 +176,11 @@ export default defineComponent({
       { name: 'actions', label: 'Ações', field: 'actions', align: 'left' }
     ];
 
-    const paginacao = ref({
+    const pagination = ref({
       rowsPerPage: 5
     });
     
-    const filtro = ref('');
+    const filter = ref('');
 
     const avaragePermissionsPerUser = computed(() => {
       const total = users.value.reduce((acc, user) => acc + user.permissions.length, 0);
@@ -222,20 +224,6 @@ export default defineComponent({
         barChart?.resize();
         pizzaChart?.resize();
       });
-    }
-
-    function stringToColor(str) {
-      let hash = 0;
-
-      for (let i = 0; i < str.length; i++) {
-        hash = str.charCodeAt(i) + ((hash << 5) - hash);
-      }
-
-      const r = (hash >> 16) & 0xFF;
-      const g = (hash >> 8) & 0xFF; 
-      const b = hash & 0xFF;        
-
-      return `rgb(${r}, ${g}, ${b})`;
     }
 
     function viewUser(row) {
@@ -339,8 +327,8 @@ export default defineComponent({
 
     return {
       columns,
-      paginacao,
-      filtro,
+      pagination,
+      filter,
       avaragePermissionsPerUser,
       permissionsCount,
       percentualAdminUsers,

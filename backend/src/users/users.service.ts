@@ -6,7 +6,7 @@ import { CreateUserDto } from './public/dto/create-user.dto';
 import { NotFoundError } from 'src/common/errors';
 import { UpdateUserDto } from './public/dto/update-user.dto';
 import { JwtService } from '@nestjs/jwt';
-import { formatUserList } from 'src/utils/format-users-list';
+import { formatUsers } from 'src/utils/format-users';
 
 @Injectable()
 export class UsersService {
@@ -34,7 +34,7 @@ export class UsersService {
         password: bcrypt.hashSync(createUserDto.password, 10),
       },
       include: {
-        permissions: true, // Inclui as permissões após criar o usuário
+        permissions: true,
       },
     });
 
@@ -49,22 +49,16 @@ export class UsersService {
     };
   }
 
-  async findAll(dto: { search?: string; page?: number; limit?: number }) {
-    const { search, page = 1, limit = 15 } = dto;
+  async findAll(dto: {
+    search?: string;
+    permission?: string;
+    page?: number;
+    limit?: number;
+  }) {
+    const { search, permission, page = 1, limit = 15 } = dto;
     const users = await this.prismaService.user.findMany({
-      include: {
-        permissions: {
-          where: {
-            isRevoked: false,
-            expiresAt: { gt: new Date() },
-          },
-          include: {
-            permission: true,
-          },
-        },
-      },
-      ...(search && {
-        where: {
+      where: {
+        ...(search && {
           OR: [
             {
               name: {
@@ -79,12 +73,35 @@ export class UsersService {
               },
             },
           ],
+        }),
+        ...(permission && {
+          permissions: {
+            some: {
+              permission: {
+                id: permission,
+              },
+              isRevoked: false,
+              expiresAt: { gt: new Date() },
+            },
+          },
+        }),
+      },
+      include: {
+        permissions: {
+          where: {
+            isRevoked: false,
+            expiresAt: { gt: new Date() },
+          },
+          include: {
+            permission: true,
+          },
         },
-      }),
+      },
       skip: (page - 1) * limit,
+      take: limit,
     });
 
-    return formatUserList(users);
+    return formatUsers(users);
   }
 
   async findOne(id: string) {
