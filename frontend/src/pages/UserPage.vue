@@ -1,8 +1,7 @@
-<!-- PerfilUsuario.vue -->
 <template>
   <q-page padding>
     <div class="row q-col-gutter-md justify-center">
-      <!-- Cabeçalho -->
+
       <div class="col-12 col-md-8">
         <q-card class="bg-primary text-white">
           <q-card-section>
@@ -29,22 +28,12 @@
           <q-separator />
 
           <q-tab-panels v-model="tab" animated>
-            <!-- Painel de visualização -->
             <q-tab-panel name="visualizar">
               <div class="row q-col-gutter-md">
-                <!-- Coluna da foto de perfil e status -->
                 <div class="col-12 col-md-4 q-gutter-y-md">
                   <div class="text-center">
                     <q-avatar size="150px" class="q-mb-md">
-                      <img :src="usuario.imagem || '/api/placeholder/150/150'" />
-                      <q-badge 
-                        floating 
-                        rounded 
-                        :color="usuario.ativo ? 'positive' : 'negative'"
-                        class="q-px-sm"
-                      >
-                        {{ usuario.ativo ? 'Ativo' : 'Inativo' }}
-                      </q-badge>
+                      <img :src="user.imagem" />                      
                     </q-avatar>
                   </div>
                   
@@ -52,11 +41,10 @@
                     <q-card-section>
                       <div class="text-h6">Status da Conta</div>
                       <q-chip
-                        :color="usuario.ativo ? 'green' : 'red'"
+                        :color="user.approved ? 'green' : 'red'"
                         text-color="white"
-                        icon="circle"
                       >
-                        {{ usuario.ativo ? 'Ativo' : 'Inativo' }}
+                        {{ user.approved ? 'Aprovado' : 'Não aprovado' }}
                       </q-chip>
                     </q-card-section>
                   </q-card>
@@ -68,13 +56,13 @@
                         <q-item>
                           <q-item-section>
                             <q-item-label caption>Último acesso</q-item-label>
-                            <q-item-label>{{ formatDate(usuario.ultimoAcesso) }}</q-item-label>
+                            <q-item-label>{{ user.lastLoginAt ? date.formatDate(user.lastLoginAt, 'DD/MM/YYYY HH:mm') : '-' }}</q-item-label>
                           </q-item-section>
                         </q-item>
                         <q-item>
                           <q-item-section>
                             <q-item-label caption>Conta criada em</q-item-label>
-                            <q-item-label>{{ formatDate(usuario.dataCriacao) }}</q-item-label>
+                            <q-item-label>{{ date.formatDate(user.createdAt, 'DD/MM/YYYY HH:mm') }}</q-item-label>
                           </q-item-section>
                         </q-item>
                       </q-list>
@@ -92,27 +80,26 @@
                       <q-item>
                         <q-item-section>
                           <q-item-label caption>Nome</q-item-label>
-                          <q-item-label>{{ usuario.nome }}</q-item-label>
+                          <q-item-label>{{ user.name }}</q-item-label>
                         </q-item-section>
                       </q-item>
                       
                       <q-item>
                         <q-item-section>
                           <q-item-label caption>Email</q-item-label>
-                          <q-item-label>{{ usuario.email }}</q-item-label>
+                          <q-item-label>{{ user.email }}</q-item-label>
                         </q-item-section>
                       </q-item>
                       
                       <q-item>
                         <q-item-section>
                           <q-item-label caption>Data de Nascimento</q-item-label>
-                          <q-item-label>{{ formatDate(usuario.dataNascimento) }}</q-item-label>
+                          <q-item-label>{{ user.birthday ? date.formatDate(user.birthday, 'DD/MM/YYYY') : '-' }}</q-item-label>
                         </q-item-section>
                       </q-item>
                     </q-list>
                   </q-card>
                   
-                  <!-- Permissões do usuário -->
                   <q-card flat bordered class="q-mb-md">
                     <q-card-section>
                       <div class="text-h6">Permissões</div>
@@ -121,63 +108,62 @@
                     <q-card-section>
                       <div class="q-gutter-sm">
                         <q-chip
-                          v-for="permissao in usuario.permissoes"
-                          :key="permissao"
-                          :color="corPermissao(permissao)"
+                          v-for="permission in user.permissions"
+                          :key="permission"
+                          :style="{ backgroundColor: stringToColor(permission.name), color: 'white' }"
                           text-color="white"
-                          icon="verified_user"
                         >
-                          {{ permissao }}
+                          {{ permission.name }}
                         </q-chip>
-                        <div v-if="usuario.permissoes.length === 0" class="text-grey">
+                        <div v-if="user.permissions === 0" class="text-grey">
                           Usuário não possui permissões.
                         </div>
                       </div>
                     </q-card-section>
-                  </q-card>
-                  
-                  <q-card flat bordered>
-                    <q-card-section>
-                      <div class="text-h6">Sobre</div>
-                    </q-card-section>
-                    
-                    <q-card-section>
-                      <p v-if="usuario.descricao">{{ usuario.descricao }}</p>
-                      <p v-else class="text-grey">Nenhuma descrição fornecida.</p>
-                    </q-card-section>
-                  </q-card>
+                  </q-card>                  
                 </div>
               </div>
             </q-tab-panel>
+                  
             
-            <!-- Painel de edição -->
             <q-tab-panel name="editar">
-              <q-form @submit="salvarPerfil" class="q-gutter-md">
+              <q-form @submit="updateUser" class="q-gutter-md">
                 <div class="row q-col-gutter-md">
-                  <!-- Coluna da foto e status -->
                   <div class="col-12 col-md-4">
                     <div class="text-center">
                       <q-avatar size="150px" class="q-mb-sm">
-                        <img :src="formUsuario.imagem || '/api/placeholder/150/150'" />
+                        <img :src="userForm.imagem || 'https://cdn.quasar.dev/img/boy-avatar.png'" />
                       </q-avatar>
-                      
+
                       <div class="q-gutter-sm">
-                        <q-btn size="sm" color="primary" label="Upload" icon="cloud_upload" />
-                        <q-btn size="sm" color="negative" label="Remover" icon="delete" @click="removerImagem" />
+                        <q-btn 
+                          size="sm" 
+                          color="primary" 
+                          label="Upload" 
+                          icon="cloud_upload"
+                          @click="triggerFileInput" 
+                        />
+                        <input 
+                          type="file" 
+                          ref="fileInput"
+                          accept="image/*" 
+                          style="display: none" 
+                          @change="onFileSelected"
+                        />
                       </div>
                     </div>
                   </div>
 
                   <div class="col-12 col-md-8">
                     <q-input
-                      v-model="formUsuario.nome"
+                      v-model="userForm.name"
                       label="Nome completo *"
                       filled
                       :rules="[val => !!val || 'Nome é obrigatório']"
                     />
                     
                     <q-input
-                      v-model="formUsuario.email"
+                      v-model="userForm.email"
                       label="Email *"
                       filled
                       type="email"
@@ -189,17 +175,18 @@
                     
                     <q-input
                       class="q-mb-md"
-                      v-model="formUsuario.dataNascimento"
+                      v-model="birthday"
                       label="Data de Nascimento"
                       filled
                       mask="##/##/####"
                       placeholder="DD/MM/AAAA"
+                      readonly
                     >
                       <template v-slot:append>
                         <q-icon name="event" class="cursor-pointer">
                           <q-popup-proxy cover transition-show="scale" transition-hide="scale">
                             <q-date
-                              v-model="formUsuario.dataNascimento"
+                              v-model="birthday"
                               mask="DD/MM/YYYY"
                               today-btn
                             />
@@ -208,15 +195,6 @@
                       </template>
                     </q-input>
                     
-                    <q-input
-                      v-model="formUsuario.descricao"
-                      label="Descrição"
-                      type="textarea"
-                      filled
-                      autogrow
-                      hint="Uma breve descrição sobre você"
-                    />
-                    
                     <div class="row justify-end q-mt-md">
                       <q-btn label="Cancelar" color="grey" flat class="q-mr-sm" @click="tab = 'visualizar'" />
                       <q-btn label="Salvar" type="submit" color="primary" />
@@ -224,7 +202,7 @@
                   </div>
                 </div>
               </q-form>
-            </q-tab-panel>
+            </q-tab-panel>            
           </q-tab-panels>
         </q-card>
       </div>
@@ -233,111 +211,107 @@
 </template>
 
 <script>
-import { defineComponent, ref, reactive } from 'vue';
-import { useQuasar } from 'quasar';
+import { defineComponent, ref, onMounted, reactive, computed } from 'vue';
 import { date } from 'quasar';
+import api from 'src/services/api';
+import { useRoute } from 'vue-router';
+import { useColor } from 'src/composables/useColor';
+import { useQuasar } from 'quasar'
 
 export default defineComponent({
-  name: 'PerfilUsuario',
+  name: 'UserPage',
   
   setup() {
     const $q = useQuasar();
+    const fileInput = ref(null);
     const tab = ref('visualizar');
-    
-    // Dados de exemplo do usuário
-    const usuario = reactive({
-      id: 1,
-      nome: 'João Silva',
-      email: 'joao.silva@exemplo.com',
-      dataNascimento: '1990-05-15',
-      imagem: null, // URL da imagem, null para usar placeholder
-      ativo: true,
-      descricao: 'Lorem ipsum dolor sit amet, consectetur adipiscing elit. Nulla facilisi. Sed euismod, nisl eget aliquam aliquam, nunc nunc aliquet nunc, vitae aliquam nisl nunc eget nisl.',
-      ultimoAcesso: '2025-03-05T14:30:00',
-      dataCriacao: '2023-10-10T09:45:00',
-      permissoes: ['ver dashboard', 'ver usuários', 'ver perfil de outros usuários']
+    const route = useRoute();
+    const userId = route.params.id;
+    const { stringToColor } = useColor();
+    let user = ref({});
+    let userForm = reactive(user);
+
+    onMounted(() => {
+      loadUser();
     });
-    
-    // Clone para o formulário
-    const formUsuario = reactive({ 
-      ...usuario,
-      permissoes: [...usuario.permissoes] // Clone do array para evitar referência
-    });
-    
-    // Função para formatar data
-    function formatDate(dateStr) {
-      if (!dateStr) return 'N/A';
-      
-      try {
-        if (dateStr.includes('T')) {
-          // ISO datetime string
-          return date.formatDate(dateStr, 'DD/MM/YYYY HH:mm');
-        } else {
-          // Only date
-          return date.formatDate(dateStr, 'DD/MM/YYYY');
-        }
-      } catch (e) {
-        console.log(e)
-        return dateStr;
+
+    const birthday = computed({      
+      get() {
+        return userForm.value.birthday;
+      },
+      set(date) {     
+        userForm.value.birthday = date;
       }
-    }
-    
-    // Obter a cor para cada permissão
-    function corPermissao(permissao) {
-      const cores = {
-        'painel administrativo': 'red',
-        'ver dashboard': 'green',
-        'ver usuários': 'blue',
-        'ver perfil de outros usuários': 'purple'
-      };
-      
-      return cores[permissao] || 'grey';
-    }
-    
-    // Remover imagem de perfil
-    function removerImagem() {
-      formUsuario.imagem = null;
-      $q.notify({
-        color: 'info',
-        message: 'Imagem removida. Salve para confirmar.',
-        icon: 'info'
+    });
+
+    async function loadUser() {
+      await api.get(`users/${userId}`).then((res) => {
+        user.value = res.data;
+        console.log(user.value)
+      }).catch((err) => {
+        console.log(err);
       });
     }
-    
-    // Salvar alterações no perfil
-    function salvarPerfil() {
-      // Simular uma requisição de API
-      $q.loading.show({
-        message: 'Salvando alterações...'
-      });
-      
-      // Simular um delay de resposta
-      setTimeout(() => {
-        // Atualizar objeto principal com os dados do formulário
-        Object.assign(usuario, {
-          ...formUsuario,
-          permissoes: [...formUsuario.permissoes] // Clone para evitar referência
-        });
+
+    function triggerFileInput() {
+      fileInput.value.click();
+    };
+
+    function onFileSelected(event) {
+      const file = event.target.files[0];
+      if (file) {
+        // Validar o tipo de arquivo
+        if (!file.type.includes('image/')) {
+          // Substitua por sua lógica de notificação
+          alert('Por favor, selecione apenas arquivos de imagem.');
+          return;
+        }
         
-        $q.loading.hide();
+        // Criar preview da imagem
+        const reader = new FileReader();
+        reader.onload = (e) => {
+          user.value.imagem = e.target.result;
+        };
+        reader.readAsDataURL(file);
+      }     
+    };
+
+    async function updateUser() {
+      const parsedDate = date.extractDate(userForm.value.birthday, 'DD/MM/YYYY')   
+      await api.patch(`users/${userId}`, {
+        name: userForm.value.name,
+        email: userForm.value.email,
+        birthday: date.formatDate(parsedDate)
+      }).then((res) => {
+        user.value = res.data  
+        console.log(res.data)
         $q.notify({
           color: 'positive',
-          message: 'Perfil atualizado com sucesso!',
-          icon: 'check_circle'
+          message: 'Dados atualizados com sucesso!'
         });
-        
-        tab.value = 'visualizar';
-      }, 1000);
-    }
+
+      tab.value = 'visualizar';
+
+      }).catch((err) => {
+        console.log(err)
+        $q.notify({
+          color: 'negative',
+          message: `Falha ao atualizar os dados: ${err.message}`
+        });
+      })          
+    };
     
     return {
       tab,
-      usuario,
-      formUsuario,
-      formatDate,
-      corPermissao,
-      removerImagem,
-      salvarPerfil
+      userForm,
+      updateUser,
+      stringToColor,
+      user,
+      date,
+      triggerFileInput,
+      onFileSelected,
+      fileInput,
+      birthday,
     };
   }
 });

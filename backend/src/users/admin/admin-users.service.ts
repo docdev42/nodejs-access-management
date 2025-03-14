@@ -10,6 +10,27 @@ import { User } from '@prisma/client';
 export class AdminUsersService {
   constructor(private prismaService: PrismaService) {}
 
+  async findOne(id: string) {
+    const user = await this.prismaService.user.findFirst({
+      include: {
+        permissions: {
+          include: {
+            permission: true,
+          },
+        },
+      },
+      where: {
+        id: id,
+      },
+    });
+
+    if (!user) {
+      throw new NotFoundError('User', id);
+    }
+
+    return user;
+  }
+
   async update(id: string, updateUserDto: UpdateUserDto) {
     const user = await this.prismaService.user.findFirst({
       where: {

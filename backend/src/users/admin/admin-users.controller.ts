@@ -2,6 +2,7 @@ import {
   Body,
   Controller,
   Delete,
+  Get,
   Param,
   Patch,
   UseGuards,
@@ -16,6 +17,11 @@ import { AdminUsersService } from './admin-users.service';
 @Controller('admin/users')
 export class AdminUsersController {
   constructor(private adminUsersService: AdminUsersService) {}
+
+  @Get(':id')
+  findOne(@Param('id') id: string) {
+    return this.adminUsersService.findOne(id);
+  }
 
   @Patch(':id')
   update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {

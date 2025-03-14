@@ -7,9 +7,9 @@
 
         <q-toolbar-title>
           <q-avatar>
-            <img src="https://cdn.quasar.dev/logo-v2/svg/logo-mono-white.svg">
+            <q-icon name="verified_user" />
           </q-avatar>
-          Title
+          Gerenciador de acessos
         </q-toolbar-title>
 
         <q-btn 
@@ -90,9 +90,9 @@ export default defineComponent({
         link: '/app/admin'
       },
       {
-        title: 'Dashboard',
-        icon: 'dashboard',
-        link: '/app/dashboard'
+        title: 'Página de boas vindas',
+        icon: 'sentiment_satisfied',
+        link: '/app/welcome'
       },
       {
         title: 'Usuários',

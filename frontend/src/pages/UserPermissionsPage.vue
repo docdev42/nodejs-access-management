@@ -26,14 +26,14 @@
           <q-item>
             <q-item-section>
               <q-item-label class="text-subtitle2">Data de Nascimento</q-item-label>
-              <q-item-label>{{ date.formatDate(user.birthday, 'DD/MM/YYYY') }}</q-item-label>
+              <q-item-label>{{ user.birthday ? date.formatDate(user.birthday, 'DD/MM/YYYY') : '-' }}</q-item-label>
             </q-item-section>
           </q-item>
 
           <q-item>
             <q-item-section>
               <q-item-label class="text-subtitle2">Último Acesso</q-item-label>
-              <q-item-label>{{ user.lastAccess }}</q-item-label>
+              <q-item-label>{{ user.lastLoginAt ? date.formatDate(user.lastLoginAt, 'DD/MM/YYYY HH:mm') : '-' }}</q-item-label>
             </q-item-section>
           </q-item>
         </q-list>
@@ -48,6 +48,8 @@
       <q-separator />
 
       <q-card-section>
+        <q-btn label="Adicionar Permissão" color="primary" class="q-mt-md" @click="showAddPermission = true" />
+
         <q-list>
           <q-item v-for="(perm, index) in sortedPermissions" :key="index">
             <q-item-section>
@@ -60,8 +62,6 @@
             </q-item-section>
           </q-item>
         </q-list>
-
-        <q-btn label="Adicionar Permissão" color="primary" class="q-mt-md" @click="showAddPermission = true" />
       </q-card-section>
     </q-card>
 
@@ -120,9 +120,9 @@ export default defineComponent({
     });
 
     async function loadUser() {
-      await api.get(`/users/${userId}`).then((res) => {
+      await api.get(`admin/users/${userId}`).then((res) => {
         user.value = res.data;
-        console.log(user.value);
+        console.log('pessoa', user.value)
       }).catch((err) => {
         console.log(err)
       })
@@ -131,6 +131,7 @@ export default defineComponent({
     async function loadPermissionsOptions() {
       await api.get(`/admin/permissions`).then((res) => {
         permissionsOptions.value = res.data;
+        console.log('options', permissionsOptions.value)
       }).catch((err) => {
         console.log(err);
       })
@@ -142,8 +143,6 @@ export default defineComponent({
       permissionId: newPermission.value,
       expiresAt: expiresAt.value,
     };
-    console.log(payload);
-    // Enviar para o backend
     await api.post('/admin/user-permissions', payload)
       .then((res) => {
         showAddPermission.value = false;
@@ -169,22 +168,18 @@ export default defineComponent({
       return [...user.value.permissions].sort((a, b) => {
         const now = new Date();
 
-        // Se a permissão está revogada, coloca no fim
         if (a.isRevoked && !b.isRevoked) return 1;
         if (!a.isRevoked && b.isRevoked) return -1;
 
-        // Converte para Date para comparação
         const dateA = new Date(a.expiresAt);
         const dateB = new Date(b.expiresAt);
 
-        // Se a permissão já expirou, coloca no fim
         const aExpired = dateA < now;
         const bExpired = dateB < now;
 
         if (aExpired && !bExpired) return 1;
         if (!aExpired && bExpired) return -1;
 
-        // Ordena pela data de expiração (mais cedo primeiro)
         return dateA - dateB;
       });
     });

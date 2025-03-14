@@ -6,7 +6,7 @@ import { CreateUserDto } from './public/dto/create-user.dto';
 import { NotFoundError } from 'src/common/errors';
 import { UpdateUserDto } from './public/dto/update-user.dto';
 import { JwtService } from '@nestjs/jwt';
-import { formatUsers } from 'src/utils/format-users';
+import { formatUser, formatUsers } from 'src/utils/format-users';
 
 @Injectable()
 export class UsersService {
@@ -108,6 +108,10 @@ export class UsersService {
     const user = await this.prismaService.user.findFirst({
       include: {
         permissions: {
+          where: {
+            isRevoked: false,
+            expiresAt: { gt: new Date() },
+          },
           include: {
             permission: true,
           },
@@ -122,10 +126,11 @@ export class UsersService {
       throw new NotFoundError('User', id);
     }
 
-    return user;
+    return formatUser(user);
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
+    console.log(updateUserDto);
     const user = await this.prismaService.user.findFirst({
       where: {
         id: id,

@@ -180,7 +180,7 @@ export default defineComponent({
       { name: 'email', label: 'Email', field: 'email', sortable: true, align: 'left' },
       { name: 'approved', label: 'Status', field: 'approved', sortable: true, align: 'left' },
       { name: 'permissions', label: 'Permissões', field: 'permissions', sortable: false, align: 'left' },
-      { name: 'actions', label: 'Ações', field: 'act/ Inclui as permissões após criar o usuárioions', align: 'left' }
+      { name: 'actions', label: 'Ações', field: 'actions', sortable: false, align: 'left' }
     ];
     
     async function loadUsers() {

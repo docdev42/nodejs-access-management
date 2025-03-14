@@ -36,9 +36,19 @@ export class AuthService {
       throw new InvalidCredentialsError();
     }
 
+    const logedAt = new Date();
+
+    await this.prismaService.user.update({
+      where: { id: user.id },
+      data: {
+        lastLoginAt: logedAt,
+      },
+    });
+
     const payload = {
       sub: user.id,
       name: user.name,
+      lastLoginAt: logedAt,
       permissions: user.permissions.map((p) => ({
         id: p.id,
         name: p.permission.name,

@@ -143,7 +143,7 @@ import api from 'src/services/api';
 import { useColor } from 'src/composables/useColor';
 
 export default defineComponent({
-  name: 'DashboardPermissoes',
+  name: 'AdminPage',
 
   setup() {
     let barChart = null;
