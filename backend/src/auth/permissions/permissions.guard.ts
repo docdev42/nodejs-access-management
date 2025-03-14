@@ -17,10 +17,6 @@ export class PermissionsGuard implements CanActivate {
 
     if (!user.approved) return false;
 
-    console.log(user);
-    console.log(requiredPermissions);
-    console.log(user.permissions);
-
     if (!requiredPermissions) {
       return true;
     }

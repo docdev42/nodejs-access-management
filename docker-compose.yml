@@ -35,15 +35,6 @@ services:
       - NODE_ENV=production
     depends_on:
       - backend
-
-  frontend:
-    build: ./frontend/dev.Dockerfile
-    ports:
-      - "9000:9000"
-    depends_on:
-      - backend
-    volumes:
-      - .:/app
-
+      
 volumes:
   pgdata:

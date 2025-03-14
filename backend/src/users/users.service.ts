@@ -145,7 +145,6 @@ export class UsersService {
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
-    console.log(updateUserDto);
     const user = await this.prismaService.user.findFirst({
       where: {
         id: id,

@@ -281,8 +281,7 @@ export default defineComponent({
         email: userForm.value.email,
         birthday: date.formatDate(parsedDate)
       }).then((res) => {
-        user.value = res.data  
-        console.log(res.data)
+        user.value = res.data
         $q.notify({
           color: 'positive',
           message: 'Dados atualizados com sucesso!'
@@ -291,7 +290,6 @@ export default defineComponent({
       tab.value = 'visualizar';
 
       }).catch((err) => {
-        console.log(err)
         $q.notify({
           color: 'negative',
           message: `Falha ao atualizar os dados: ${err.message}`

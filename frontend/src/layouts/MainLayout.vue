@@ -37,7 +37,7 @@
       <q-list class="q-pa-md">
         <div class="q-mb-md flex flex-center">
           <q-avatar size="80px">
-            <img src="https://cdn.quasar.dev/img/avatar.png" alt="Avatar">
+            <img src="https://cdn.quasar.dev/img/boy-avatar.png" alt="Avatar">
           </q-avatar>
         </div>
 
@@ -130,9 +130,7 @@ export default defineComponent({
         try {
           const decoded = jwtDecode(token);
           userInfo.value = decoded;
-          console.log(userInfo)
         } catch (error) {
-          console.error('Erro ao decodificar o token', error);
           return null;
         }
       }
@@ -157,7 +155,6 @@ export default defineComponent({
         localStorage.setItem('token', '');
       })
       .catch((err) => {
-        console.log(err);
         $q.notify({
           type: 'negative',
           message: err.response?.data?.message || 'Erro ao deslogar usuário!',

@@ -24,7 +24,7 @@ export class UserPermissionsModule implements OnModuleInit {
         {
           userId: adminUser.id,
           permissionId: adminPermission.id,
-          expiresAt: '2075-04-01T00:00:00.000Z',
+          expiresAt: new Date().toISOString(),
         },
       ];
 
