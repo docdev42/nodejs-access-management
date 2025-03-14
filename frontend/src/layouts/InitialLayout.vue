@@ -5,9 +5,9 @@
       <q-toolbar>
         <q-toolbar-title>
           <q-avatar>
-            <img src="https://cdn.quasar.dev/logo-v2/svg/logo-mono-white.svg">
+            <q-icon name="verified_user" />
           </q-avatar>
-          Title
+          Gerenciador de acessos
         </q-toolbar-title>
       </q-toolbar>
     </q-header>

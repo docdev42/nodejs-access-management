@@ -41,7 +41,7 @@ export class AuthModule implements OnModuleInit {
         name: 'Ash',
         password: bcrypt.hashSync('ash123', 10),
         birthday: '1987-05-22T00:00:00.000Z',
-        approved: true,
+        approved: false,
       },
     ];
 

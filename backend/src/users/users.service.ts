@@ -26,21 +26,36 @@ export class UsersService {
       throw new EmailAlreadyExistsError(createUserDto.email);
     }
 
+    const logedAt = new Date();
+
     const newUser = await this.prismaService.user.create({
       data: {
         name: createUserDto.name,
         email: createUserDto.email,
         birthday: createUserDto.birthday,
         password: bcrypt.hashSync(createUserDto.password, 10),
+        lastLoginAt: logedAt,
       },
       include: {
-        permissions: true,
+        permissions: {
+          include: {
+            permission: true,
+          },
+        },
       },
     });
 
     const payload = {
       sub: newUser.id,
-      permissions: newUser.permissions,
+      name: newUser.name,
+      lastLoginAt: logedAt,
+      approved: newUser.approved,
+      permissions: newUser.permissions.map((p) => ({
+        id: p.id,
+        slug: p.permission.slug,
+        expiresAt: p.expiresAt,
+        isRevoked: p.isRevoked,
+      })),
     };
     const access_token = this.jwtService.sign(payload);
 

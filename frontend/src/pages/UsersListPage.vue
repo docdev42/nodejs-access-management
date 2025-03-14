@@ -155,6 +155,7 @@
 import { defineComponent, ref, reactive, onMounted, watch } from 'vue';
 import api from 'src/services/api';
 import { useColor } from 'src/composables/useColor';
+import { useQuasar } from 'quasar';
 
 export default defineComponent({
   name: 'UsersList',
@@ -164,6 +165,7 @@ export default defineComponent({
     let permissionsOptions = ref([]);
     const loading = ref(false);
     const { stringToColor } = useColor();
+    const $q = useQuasar();
 
     onMounted(() => {
       loadUsers();
@@ -192,7 +194,10 @@ export default defineComponent({
       }).then((res) => {
         users.value = res.data;
       }).catch((err) => {
-        console.log(err)
+        $q.notify({
+          type: 'negative',
+          message: err.response?.data?.message || 'Erro ao carregar lista de usuários',
+        });
       })
     } 
 
@@ -200,7 +205,10 @@ export default defineComponent({
       await api.get(`/permissions`).then((res) => {
         permissionsOptions.value = res.data;
       }).catch((err) => {
-        console.log(err);
+        $q.notify({
+          type: 'negative',
+          message: err.response?.data?.message || 'Erro ao carregar lista de permissões',
+        });
       })
     };
 
@@ -225,6 +233,7 @@ export default defineComponent({
       users,
       stringToColor,
       permissionsOptions,
+      $q,
     };
   }
 });

@@ -114,11 +114,11 @@
                             </div>
                           </q-item-section>
                         </q-item>
-                        <q-item clickable @click="removeUser(row)">
+                        <q-item clickable @click="approve(row)" v-if="!row.approved">
                           <q-item-section class="q-gutter-xs">
                             <div class="row items-center">
-                              <q-icon name="delete" class="q-mr-sm" />
-                              Remover
+                              <q-icon name="" class="q-mr-sm" />
+                              Aprovar
                             </div>
                           </q-item-section>
                         </q-item>
@@ -141,6 +141,7 @@ import { defineComponent, ref, computed, onMounted, watch } from 'vue';
 import * as echarts from 'echarts';
 import api from 'src/services/api';
 import { useColor } from 'src/composables/useColor';
+import { useQuasar } from 'quasar';
 
 export default defineComponent({
   name: 'AdminPage',
@@ -151,12 +152,16 @@ export default defineComponent({
     let users = ref([]);
     let permissions = ref([]);
     const { stringToColor } = useColor();
+    const $q = useQuasar();
 
     async function loadUsers() {
       await api.get('/users').then((res) => {
         users.value = res.data;
       }).catch((err) => {
-        console.log(err)
+        $q.notify({
+          type: 'negative',
+          message: err.response?.data?.message || 'Erro ao carregar lista de usuários',
+        });
       })
     } 
 
@@ -164,7 +169,10 @@ export default defineComponent({
       await api.get('/admin/permissions').then((res) => {
         permissions.value = res.data;
       }).catch((err) => {
-        console.log(err);
+        $q.notify({
+          type: 'negative',
+          message: err.response?.data?.message || 'Erro ao carregar lista de permissões',
+        });
       })
     }
 
@@ -226,8 +234,23 @@ export default defineComponent({
       });
     }
 
-    function viewUser(row) {
-      this.$router.push(`/app/admin/permissoes-de-usuario/${row.id}`)
+    async function approve(user) {
+      api.patch(`/admin/users/${user.id}`, { approved: true }).then(() => {
+        user.approved = true;
+        $q.notify({
+          type: 'positive',
+          message: 'Usuário aprovado com sucesso',
+        });
+      }).catch((err) => {
+        $q.notify({
+          type: 'negative',
+          message: err.response?.data?.message || 'Erro ao aprovar usuário',
+        });
+      })
+    }
+
+    function viewUser(user) {
+      this.$router.push(`/app/admin/permissoes-de-usuario/${user.id}`)
     }
 
     function refreshCharts() {
@@ -334,7 +357,9 @@ export default defineComponent({
       percentualAdminUsers,
       stringToColor,
       viewUser,
-      users
+      users,
+      $q,
+      approve
     };
   }
 });

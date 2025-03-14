@@ -10,7 +10,7 @@ const routes = [
     path: '/app',
     component: () => import('layouts/MainLayout.vue'),
     children: [
-      { path: 'welcome', component: () => import('src/pages/WelcomePage.vue') },
+      { path: '', component: () => import('src/pages/WelcomePage.vue') },
       { path: 'admin', component: () => import('src/pages/AdminPage.vue') },
       { path: 'admin/permissoes-de-usuario/:id', component: () => import('src/pages/UserPermissionsPage.vue') },
       { path: 'usuarios/:id', component: () => import('src/pages/UserPage.vue') },

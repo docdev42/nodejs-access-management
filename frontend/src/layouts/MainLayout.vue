@@ -72,6 +72,7 @@ import EssentialLink from 'components/EssentialLink.vue'
 import { useQuasar } from 'quasar'
 import api from 'src/services/api';
 import { jwtDecode } from 'jwt-decode';
+import { useRouter } from 'vue-router';
 
 export default defineComponent({
   name: 'MainLayout',
@@ -82,6 +83,7 @@ export default defineComponent({
     let leftDrawerOpen = ref(false);
     let rightDrawerOpen = ref(false);
     let userInfo = ref({});
+    const router = useRouter();
     const $q = useQuasar();
     const linksList = ref([
       {
@@ -92,7 +94,7 @@ export default defineComponent({
       {
         title: 'Página de boas vindas',
         icon: 'sentiment_satisfied',
-        link: '/app/welcome'
+        link: '/app'
       },
       {
         title: 'Usuários',
@@ -151,10 +153,11 @@ export default defineComponent({
     async function handleLogout() {
       await api.post('/auth/logout')
       .then(() => {
+        router.push('/')
         localStorage.setItem('token', '');
-        this.$router.push('/')
       })
       .catch((err) => {
+        console.log(err);
         $q.notify({
           type: 'negative',
           message: err.response?.data?.message || 'Erro ao deslogar usuário!',

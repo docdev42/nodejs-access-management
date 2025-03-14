@@ -5,15 +5,14 @@ export class TokenBlacklistService {
   private blacklistedTokens: Map<string, number> = new Map();
 
   constructor() {
-    // Limpa tokens expirados periodicamente
     setInterval(() => this.cleanupExpiredTokens(), 3600000); // 1 hora
   }
 
-  async addToBlacklist(token: string, expiryTime: number): Promise<void> {
+  addToBlacklist(token: string, expiryTime: number): void {
     this.blacklistedTokens.set(token, expiryTime);
   }
 
-  async isBlacklisted(token: string): Promise<boolean> {
+  isBlacklisted(token: string): boolean {
     if (!this.blacklistedTokens.has(token)) {
       return false;
     }

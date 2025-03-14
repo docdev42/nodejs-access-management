@@ -98,7 +98,7 @@
 import api from 'src/services/api';
 import { defineComponent, ref, onMounted, computed } from 'vue';
 import { useRoute } from 'vue-router';
-import { date } from 'quasar';
+import { date, useQuasar } from 'quasar';
 
 export default defineComponent({
   name: 'UserPermissionsPage',
@@ -111,6 +111,7 @@ export default defineComponent({
     let expiresAt = ref(null);
     let editingIndex = ref(null);
 
+    const $q = useQuasar();
     const route = useRoute();
     const userId = route.params.id;
 
@@ -122,18 +123,22 @@ export default defineComponent({
     async function loadUser() {
       await api.get(`admin/users/${userId}`).then((res) => {
         user.value = res.data;
-        console.log('pessoa', user.value)
       }).catch((err) => {
-        console.log(err)
+        $q.notify({
+          type: 'negative',
+          message: err.response?.data?.message || 'Erro ao carregar informações do usuário',
+        });
       })
     };
 
     async function loadPermissionsOptions() {
       await api.get(`/admin/permissions`).then((res) => {
         permissionsOptions.value = res.data;
-        console.log('options', permissionsOptions.value)
       }).catch((err) => {
-        console.log(err);
+        $q.notify({
+          type: 'negative',
+          message: err.response?.data?.message || 'Erro ao carregar as permissões',
+        });
       })
     };
 
@@ -149,18 +154,31 @@ export default defineComponent({
         user.value.permissions.push(res.data)
         newPermission.value = null;
         expiresAt.value = null;
+        $q.notify({
+          type: 'positive',
+          message: 'Permissão atribuida com sucesso',
+        });
       })
       .catch((err) => {
-        console.error('Erro ao adicionar permissão:', err);
+        $q.notify({
+          type: 'negative',
+          message: err.response?.data?.message || 'Erro ao atribuir permissão ao usuário',
+        });
       });
   }
 
     async function revokePermission(perm) {
-      await api.patch(`/admin/user-permissions/${perm.id}/revoke`).then((res) => {
+      await api.patch(`/admin/user-permissions/${perm.id}/revoke`).then(() => {
         perm.isRevoked = true;
-        console.log(res.data)
+        $q.notify({
+          type: 'positive',
+          message: 'Permissão revogada com sucesso',
+        });
       }).catch((err) => {
-        console.log(err);
+        $q.notify({
+          type: 'negative',
+          message: err.response?.data?.message || 'Erro ao revogar permissão',
+        });
       })
     };
 
@@ -195,6 +213,7 @@ export default defineComponent({
       date,
       expiresAt,
       sortedPermissions,
+      $q,
     };
   }
 });

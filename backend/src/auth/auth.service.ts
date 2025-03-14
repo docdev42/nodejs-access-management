@@ -49,9 +49,10 @@ export class AuthService {
       sub: user.id,
       name: user.name,
       lastLoginAt: logedAt,
+      approved: user.approved,
       permissions: user.permissions.map((p) => ({
         id: p.id,
-        name: p.permission.name,
+        slug: p.permission.slug,
         expiresAt: p.expiresAt,
         isRevoked: p.isRevoked,
       })),
@@ -63,8 +64,8 @@ export class AuthService {
     };
   }
 
-  async logout(token) {
-    await this.tokenBlacklistService.addToBlacklist(
+  logout(token) {
+    this.tokenBlacklistService.addToBlacklist(
       token,
       this.jwtService.decode(token)['exp'],
     );

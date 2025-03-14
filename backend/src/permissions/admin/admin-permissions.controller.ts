@@ -12,12 +12,12 @@ import { CreatePermissionDto } from './dto/create-permission.dto';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
 import { AdminPermissionsService } from './admin-permissions.service';
 import { AuthGuard } from 'src/auth/auth.guard';
-import { UserRoles } from 'src/auth/roles/roles';
-import { Roles } from 'src/auth/roles/roles.decorator';
-import { RolesGuard } from 'src/auth/roles/roles.guard';
+import { Permissions } from 'src/auth/permissions/permissions.decorator';
+import { UserPermissions } from 'src/auth/permissions/permissions';
+import { PermissionsGuard } from 'src/auth/permissions/permissions.guard';
 
-// @Roles(UserRoles.Admin) //aplica quais roles em todas as rotas, pode por antes de cada metodo
-@UseGuards(AuthGuard) // ativa a validação RolesGuard
+@Permissions(UserPermissions.Admin)
+@UseGuards(AuthGuard, PermissionsGuard)
 @Controller('admin/permissions')
 export class AdminPermissionsController {
   constructor(private readonly permissionsService: AdminPermissionsService) {}

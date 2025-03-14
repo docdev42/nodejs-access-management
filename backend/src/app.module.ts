@@ -8,6 +8,7 @@ import { UsersModule } from './users/users.module';
 import { UserPermissionsController } from './user-permissions/admin/user-permissions/user-permissions.controller';
 import { UserPermissionsService } from './user-permissions/admin/user-permissions/user-permissions.service';
 import { BlacklistModule } from './auth/blacklist.module';
+import { UserPermissionsModule } from './user-permissions/admin/user-permissions/user-permissions.module';
 
 @Module({
   imports: [
@@ -16,6 +17,8 @@ import { BlacklistModule } from './auth/blacklist.module';
     UsersModule,
     PermissionsModule,
     BlacklistModule,
+    UserPermissionsModule,
+    UserPermissionsModule,
   ],
   controllers: [AppController, UserPermissionsController],
   providers: [AppService, UserPermissionsService],

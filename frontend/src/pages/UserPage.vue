@@ -123,8 +123,7 @@
                   </q-card>                  
                 </div>
               </div>
-            </q-tab-panel>
-                  
+            </q-tab-panel>                  
             
             <q-tab-panel name="editar">
               <q-form @submit="updateUser" class="q-gutter-md">
@@ -247,9 +246,11 @@ export default defineComponent({
     async function loadUser() {
       await api.get(`users/${userId}`).then((res) => {
         user.value = res.data;
-        console.log(user.value)
       }).catch((err) => {
-        console.log(err);
+        $q.notify({
+          type: 'negative',
+          message: err.response?.data?.message || 'Erro ao carregar informações do usuário',
+        });
       });
     }
 
@@ -260,14 +261,11 @@ export default defineComponent({
     function onFileSelected(event) {
       const file = event.target.files[0];
       if (file) {
-        // Validar o tipo de arquivo
         if (!file.type.includes('image/')) {
-          // Substitua por sua lógica de notificação
           alert('Por favor, selecione apenas arquivos de imagem.');
           return;
         }
         
-        // Criar preview da imagem
         const reader = new FileReader();
         reader.onload = (e) => {
           user.value.imagem = e.target.result;
@@ -303,6 +301,7 @@ export default defineComponent({
     
     return {
       tab,
+      $q,
       userForm,
       updateUser,
       stringToColor,

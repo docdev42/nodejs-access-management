@@ -23,19 +23,24 @@ export class PermissionsModule implements OnModuleInit {
         description: 'acesso a todos os recursos',
       },
       {
+        name: 'Dashboard',
+        slug: 'dashboard',
+        description: 'acesso à dashboard',
+      },
+      {
         name: 'Listar usuários',
         slug: 'listar-usuarios',
-        description: 'acesso a lista de usuários',
+        description: 'acesso à lista de usuários',
       },
       {
         name: 'Ver usuário',
         slug: 'ver-usuario',
-        description: 'acesso a view de usuário',
+        description: 'acesso à view de usuário',
       },
       {
         name: 'Editar usuários',
         slug: 'editar-usuarios',
-        description: 'acesso a edição de usuário',
+        description: 'acesso à edição de usuário',
       },
       {
         name: 'Aprovar usuários',
@@ -55,7 +60,7 @@ export class PermissionsModule implements OnModuleInit {
       {
         name: 'Listar permissões',
         slug: 'listar-permissoes',
-        description: 'acesso a lista de permissões',
+        description: 'acesso à lista de permissões',
       },
       {
         name: 'Remover permissões',
